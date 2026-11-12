@@ -14,7 +14,7 @@ Current method: **explain from real code, then point to further reading** ([0006
 ## Style
 - Short and concrete. Start from the code, not the theory.
 - Assume a CS background: skip basics, but explain practical "why" and "how in real projects".
-- Follow-up questions are answered in the context of the same lesson.
+- Follow-up questions are answered in the context of the same lesson. Each answer is built from the lesson context, the thread so far, and related concepts I've already `seen` or `understood`, so it builds on what I know ([0012](../decisions/0012-stateless-follow-ups.md)).
 
 ## Not used for now
 Socratic questioning, predict-the-next-step, and spaced repetition. They can be added later through a new ADR.

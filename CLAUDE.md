@@ -15,7 +15,7 @@ A personal tutor agent. It watches my Claude Code sessions and teaches me the co
 - Keep it short. Skip basics: I have a CS background but little practical experience.
 
 ## Status
-Design phase, no code yet. Decided: Claude Code only, `claude -p` on my subscription, Python, global status-based memory, no quizzes for now (see `docs/decisions/`). Still open: concept memory format, TUI library.
+Design phase, no code yet. Decided: Claude Code only, `claude -p` on my subscription (no tools, neutral directory), Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, stateless follow-ups, no quizzes for now (see `docs/decisions/`). Next: plan milestones, starting with a spike.
 
 ## Docs
 All project decisions and design notes live in `docs/`. Start at `docs/CLAUDE.md` (index).

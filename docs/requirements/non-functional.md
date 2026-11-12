@@ -4,6 +4,7 @@
 
 - **Non-blocking hook:** the hook returns within about 100 ms and starts detection in the background. The agent never waits for the tutor.
 - **No self-observation:** `claude -p` calls started by the tutor must not trigger the tutor's hooks ([0003](../decisions/0003-claude-p-subscription-runtime.md)).
+- **No side effects:** the tutor's `claude -p` calls have no tools and never run inside an observed project, so they can't change any code ([0011](../decisions/0011-sandboxed-claude-calls.md)).
 - **Usage budget:** at most one detection call per finished agent turn, never one per tool call. Very small turns (for example no code changes and no commands) are skipped without an LLM call.
 - **Interruption limit:** at most one desktop notification per agent turn, and notifications can be muted.
 - **Secrets:** the setup token lives only in `.env`, which is git-ignored. Hooks and logs never print it.
