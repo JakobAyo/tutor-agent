@@ -6,7 +6,7 @@ A personal tutor agent. It watches my Claude Code sessions and teaches me the co
 - **Observe:** a Claude Code hook fires at the end of each agent turn. The tutor reads the new part of the session transcript (code, commands, reasoning).
 - **Detect:** in the background, find concepts that are new to me and worth knowing (patterns, architecture, mechanisms, trade-offs, not syntax). Store them in a global concept memory and send a desktop notification.
 - **Teach on demand:** in a separate terminal pane, explain a concept starting from the real code where it appeared, then generalize, and give links for further reading. Explain *why* the agent did something, not only *what* it did.
-- **Track progress:** each concept has a status `new` → `seen` → `understood`. I mark `understood` myself.
+- **Track progress:** each concept has a status `new` → `seen` → `understood`. I mark `understood` myself, or `dismissed` if it's not worth learning.
 
 ## Principles
 - The goal is learning, not output. The tutor explains. It does not write code for me.
@@ -15,7 +15,7 @@ A personal tutor agent. It watches my Claude Code sessions and teaches me the co
 - Keep it short. Skip basics: I have a CS background but little practical experience.
 
 ## Status
-Design phase, no code yet. Decided: Claude Code only, `claude -p` on my subscription (no tools, neutral directory), Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, stateless follow-ups, no quizzes for now (see `docs/decisions/`). Next: plan milestones, starting with a spike.
+Design phase, no code yet. Decided: Claude Code only (all sessions, including subagents), `claude -p` on my subscription (no tools, neutral directory, cheap model for detection), source snippets stored with each concept, Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, cached lessons, stateless follow-ups, token (if needed) in the data directory, no quizzes for now (see `docs/decisions/`). Next: plan milestones, starting with a spike.
 
 ## Docs
 All project decisions and design notes live in `docs/`. Start at `docs/CLAUDE.md` (index).

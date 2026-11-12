@@ -10,7 +10,7 @@
 | **Concept** | A reusable piece of understanding (pattern, mechanism, trade-off), named at a general level. |
 | **Worth knowing** | New to me *and* reusable beyond the current line of code. See [triggers](../observation/triggers.md). |
 | **Concept memory** | The global file that stores every concept with its status and sources. |
-| **Source reference** | A pointer to where a concept appeared (project, session, transcript line, file). |
+| **Source reference** | Where a concept appeared (project, session, transcript line, file), plus a short stored snippet of the code, diff, or command. |
 | **Lesson** | The explanation the tutor gives for one concept, starting from its source reference. |
 | **Tutor pane** | The TUI running in a separate terminal pane. |
 | **Detector** | The background process that finds concepts in a batch using `claude -p`. |
