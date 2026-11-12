@@ -1,21 +1,21 @@
 # Tutor Agent
 
-A personal tutor agent. It watches my other coding agents while they work and teaches me the concepts behind what they're doing. The goal is to reach senior-SWE-level understanding faster, and to stop being a "vibe coder" who ships code they can't explain.
+A personal tutor agent. It watches my Claude Code sessions and teaches me the concepts behind what the agents are doing. The goal is to reach senior-SWE-level understanding faster, and to stop being a "vibe coder" who ships code they can't explain.
 
 ## Core idea
-- **Observe:** follow the sessions of other coding agents (the code they write, the commands they run, the decisions they make).
-- **Teach:** explain the concepts underneath: language features, design patterns, architecture, testing, tooling, trade-offs. Explain *why* the agent did something, not only *what* it did.
-- **Check understanding:** ask questions, give small exercises, and get me to predict or critique the agent's next step before it happens.
-- **Track progress:** keep a model of what I know and where my gaps are, and adjust depth and topics to fit.
+- **Observe:** a Claude Code hook fires at the end of each agent turn. The tutor reads the new part of the session transcript (code, commands, reasoning).
+- **Detect:** in the background, find concepts that are new to me and worth knowing (patterns, architecture, mechanisms, trade-offs, not syntax). Store them in a global concept memory and send a desktop notification.
+- **Teach on demand:** in a separate terminal pane, explain a concept starting from the real code where it appeared, then generalize, and give links for further reading. Explain *why* the agent did something, not only *what* it did.
+- **Track progress:** each concept has a status `new` → `seen` → `understood`. I mark `understood` myself.
 
 ## Principles
-- The goal is learning, not output. The tutor explains and asks questions. It does not write code for me.
-- Prefer Socratic questioning and active recall over long lectures.
-- Tie every lesson to the real code being written right now, then generalize.
-- Keep it short and timely: teach at the moment the concept shows up.
+- The goal is learning, not output. The tutor explains. It does not write code for me.
+- Never block or change the observed agent session.
+- Tie every lesson to the real code, then generalize.
+- Keep it short. Skip basics: I have a CS background but little practical experience.
 
 ## Status
-Early design phase. No code yet. Tech stack, the mechanism for observing agents, and storage are undecided (see `docs/decisions/`).
+Design phase, no code yet. Decided: Claude Code only, `claude -p` on my subscription, Python, global status-based memory, no quizzes for now (see `docs/decisions/`). Still open: concept memory format, TUI library.
 
 ## Docs
 All project decisions and design notes live in `docs/`. Start at `docs/CLAUDE.md` (index).
