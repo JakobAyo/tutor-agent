@@ -1,0 +1,112 @@
+[
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:25:56.446Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:4",
+  "kind": "prompt",
+  "file": null,
+  "content": "for my claude code license which reset after one week.\nI would like to have sometype of a python code or a harness which i would turn it couple hours before the reset. where i know that i wouldn't use the LLM anymore so that i can make use of the left over tokens before the reset. \n\ni am thinking about as the japanese tradition to not wasting food. \n\nI am thinking of a harness that would be a python code which would iterate and and call calude with claude -p and this harness would just do some tasks and improve it self\n\nso it would work on something and it would see some blocker or a window for improvement and it would then rewrite the harness code and then run it again"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:26:03.341Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:23",
+  "kind": "command",
+  "file": null,
+  "content": "ls -la ~/Projects/project-d; claude --version; claude --help 2>&1 | grep -E -- '--(print|output-format|max-turns|allowedTools|allowed-tools|permission-mode|model|append-system-prompt|dangerously)' "
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:26:03.615Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:30",
+  "kind": "tool_result",
+  "file": null,
+  "content": "drwxr-xr-x <user> <user> 4.0 KB Mon Oct 19 13:23:29 2026 .\ndrwxr-xr-x <user> <user> 4.0 KB Mon Oct 19 13:23:29 2026 ..\n2.1.303 (Claude Code)\nClaude Code - starts an interactive session by default, use -p/--print for\n                                        with --print the path to a file that\n  --allowedTools, --allowed-tools <tools...>\n  --append-system-prompt <prompt>       Append a system prompt to \n[... 820 chars cut ...]\nly works with --print):\n  --permission-mode <mode>              Permission mode to use for the session\n                                        --print: \"host\" (the SDK host or\n  -p, --print                           Print response and exit (useful for\n                                        --output-format=stream-json)\n                                        --append-system-prompt included \u2014 sent,"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:26:52.208Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:39",
+  "kind": "edit",
+  "file": "~/Projects/project-d/supervisor.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"Mottainai supervisor: the part that never changes.\n\nRuns harness.py one cycle at a time until the deadline. Every good cycle is\ncommitted to git; if Claude's self-edit breaks harness.py, the last good\nversion is restored. Claude is not allowed to edit this file.\n\n    python supervisor.py --hours 4\n    python supervisor.py --until \"2026-10-20 08:00\"\n\"\"\"\nimport argparse\nimport datetime as dt\nimport os\nimport signal\nimport subprocess\nimport sys\nimport time\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parent\nPROTECTED = [\"supervisor.py\"]\nEXIT_OK, EXIT_LIMIT, EXIT_DONE = 0, 3, 4\nCYCLE_TIMEOUT = 60 * 60  # hard cap for one cycle, seconds\nLIMIT_BACKOFF = 15 * 60  # wait this long after hitting a usage limit\nMAX_FAILURES = 3  # consecutive broken cycles before giving up\n\n\ndef log(msg):\n    line = f\"[{dt.datetime.now():%H:%M:%S}] {msg}\"\n    print(line, flush=True)\n    with open(ROOT / \"logs\" / \"supervisor.log\", \"a\") as f:\n        f.write(line + \"\\n\")\n\n\ndef\n[... 2427 chars cut ...]\n EXIT_LIMIT:\n            wait = min(LIMIT_BACKOFF, (deadline - dt.datetime.now()).total_seconds())\n            log(f\"usage limit hit, sleeping {wait / 60:.0f} min and retrying\")\n            commit(f\"cycle {n}: usage limit\")\n            if wait > 0:\n                time.sleep(wait)\n            continue\n        if rc == EXIT_DONE:\n            log(\"harness reports nothing left to do\")\n            commit(f\"cycle {n}: done\")\n            break\n        if rc == EXIT_OK and harness_is_valid():\n            failures = 0\n            commit(f\"cycle {n}\")\n            log(f\"cycle {n} ok\")\n            continue\n\n        failures += 1\n        log(f\"cycle {n} failed (rc={rc}), restoring last good harness.py ({failures}/{MAX_FAILURES})\")\n        restore(\"harness.py\")\n        commit(f\"cycle {n}: failed, harness restored\")\n        if failures >= MAX_FAILURES:\n            log(\"too many consecutive failures, stopping\")\n            break\n\n    log(\"supervisor finished\")\n\n\nif __name__ == \"__main__\":\n    main()\n"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:19.599Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:55",
+  "kind": "edit",
+  "file": "~/Projects/project-d/harness.py",
+  "content": "#!/usr/bin/env python3\n\"\"\"Mottainai harness: this file is meant to be rewritten by Claude.\n\nOne run of this script is one cycle:\n  1. PLAN     if TASKS.md has no open task, ask Claude to add some from GOAL.md\n  2. WORK     make progress on the first open task, working in workspace/\n  3. REFLECT  look at how the cycle went and improve this file if worth it\n\nContract with supervisor.py (keep it intact when editing this file):\n  - `python harness.py --selftest` exits 0 quickly and never calls Claude\n  - exit codes: 0 = cycle ok, 3 = usage limit hit, 4 = nothing left to do\n  - never edit supervisor.py\n\"\"\"\nimport argparse\nimport datetime as dt\nimport json\nimport re\nimport shutil\nimport subprocess\nimport sys\nimport time\nfrom pathlib import Path\n\nROOT = Path(__file__).resolve().parent\nTASKS = ROOT / \"TASKS.md\"\nGOAL = ROOT / \"GOAL.md\"\nJOURNAL = ROOT / \"JOURNAL.md\"\nWORKSPACE = ROOT / \"workspace\"\nRUNS = ROOT / \"logs\" / \"runs.jsonl\"\n\nEXIT_OK, EXIT_LIMIT, EXIT_DONE = 0, 3, 4\n\nMODEL = None  # None \n[... 5374 chars cut ...]\nre_true\")\n    ap.add_argument(\"--cycle\", type=int, default=0)\n    ap.add_argument(\"--deadline\", type=dt.datetime.fromisoformat)\n    args = ap.parse_args()\n    if args.selftest:\n        selftest()\n        return EXIT_OK\n\n    deadline = args.deadline or dt.datetime.now() + dt.timedelta(hours=1)\n    WORKSPACE.mkdir(exist_ok=True)\n    RUNS.parent.mkdir(exist_ok=True)\n\n    try:\n        if not open_tasks():\n            claude(plan_prompt(), REFLECT_TURNS, \"plan\")\n        tasks = open_tasks()\n        if not tasks:\n            return EXIT_DONE\n\n        print(f\"cycle {args.cycle}: {tasks[0][:80]}\", flush=True)\n        result = claude(work_prompt(tasks[0], deadline), WORK_TURNS, \"work\")\n\n        minutes_left = (deadline - dt.datetime.now()).total_seconds() / 60\n        if minutes_left > MIN_MINUTES_FOR_REFLECT:\n            claude(reflect_prompt(result), REFLECT_TURNS, \"reflect\")\n    except UsageLimit:\n        return EXIT_LIMIT\n    return EXIT_OK\n\n\nif __name__ == \"__main__\":\n    sys.exit(main())\n"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:21.593Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:57",
+  "kind": "edit",
+  "file": "~/Projects/project-d/GOAL.md",
+  "content": "# Goal\n\nDescribe the long-term goal the harness should work toward when TASKS.md runs dry.\nClaude reads this to invent new tasks, so be specific about what \"useful\" means.\n\nExample:\nBuild a small, well-tested Python CLI in workspace/ that summarizes my Obsidian\ndaily notes into a weekly review. Prefer working code with tests over plans.\n"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:22.892Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:59",
+  "kind": "edit",
+  "file": "~/Projects/project-d/TASKS.md",
+  "content": "# Tasks\n\nOpen tasks are `- [ ]` lines; the harness always picks the first one.\nClaude marks them `- [x]` when done and may split big ones.\n\n- [ ] Replace this line with your first real task\n"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:23.470Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:61",
+  "kind": "edit",
+  "file": "~/Projects/project-d/.gitignore",
+  "content": "logs/\n__pycache__/\n"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:27.855Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:74",
+  "kind": "command",
+  "file": null,
+  "content": "python -m py_compile supervisor.py harness.py && python harness.py --selftest && echo \"Reply with just: pong\" | claude -p --output-format json --max-turns 1 --permission-mode acceptEdits --allowedTools \"Read,Bash(ls:*)\" --model haiku | python -c \"import json,sys; d=json.load(sys.stdin); print({k:d.get(k) for k in ('subtype','is_error','num_turns','total_cost_usd','result')})\""
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:31.678Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:79",
+  "kind": "tool_result",
+  "file": null,
+  "content": "selftest ok\n{'subtype': 'success', 'is_error': False, 'num_turns': 1, 'total_cost_usd': 0.0035107700000000003, 'result': 'pong'}"
+ },
+ {
+  "session_id": "b3ae93f4-8e6e-49bf-a76e-baf894ef7bdb",
+  "project": "~/Projects/project-d",
+  "timestamp": "2026-10-19T11:27:46.622Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:83",
+  "kind": "reasoning",
+  "file": null,
+  "content": "I built the harness in `~/Projects/project-d/`. Like mottainai, it puts the leftover tokens to work before they expire.\n\n## How it's built\n\nIt's split into two layers. If the code that improves itself could also rewrite its own safety net, one bad edit could break the whole run.\n\n| File | Can Claude edit it? | Role |\n|---|---|---|\n| `supervisor.py` | **No** (restored from git after every cycle) | Runs cycles until the deadline. It commits each good cycle to git and puts back the last working `harness.py` if a self-edit breaks it. If it hits a usage limit, it waits 15 minutes and tries again. It stops after 3 failed cycles in a row. |\n| `harness.py` | **Yes**, that's the point | Each cycle has three steps. **Plan**: if no tasks are left, Claude writes new ones from `GOAL.md`. **Work**: Claude works on the first open task in `TASKS.md`, inside `workspace/`. **Reflect**: Claude reviews how the cycle went and makes one focused improvement to `harness.py`. |\n| `TASKS.md` | Yes | \n[... 1584 chars cut ...]\nide the project folder. It also gets a fixed list of shell commands (`python`, `pytest`, `pip install`, `ls`, read-only `git`). I left out `--dangerously-skip-permissions` on purpose. If a task needs more, the reflect step will usually note it as a blocker in the journal, and you can add the tool to `TOOLS` in `harness.py`.\n- **`pip install` is allowed,** so Claude can install packages into whatever Python environment you start it from. A virtualenv is safer, or remove `pip install` from `TOOLS`.\n- **Usage-limit detection** works by matching the error text against a pattern. If Claude Code changes the wording of its limit message, check `logs/supervisor.log` after your first run.\n- **Model:** it uses your Claude Code default model. Set `MODEL` in `harness.py` to choose one; if Claude changes it there, the change shows up in git.\n- **Licence:** since this is probably a company licence (<company>), it's worth checking whether unattended automated use is fine under your plan or team policy."
+ }
+]

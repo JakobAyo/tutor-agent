@@ -1,0 +1,652 @@
+[
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:26:45.902Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:70",
+  "kind": "prompt",
+  "file": null,
+  "content": "A. there should be a step to check if the all the tools for the gates are installed first the harness could start and work on any spec.\nB. fix this as well\nC. fix this as well\nD. retries should start fresh\nG. Yes it should have a timeout but i don't know how much i would set it to. since this is non-deterministic and some agents take longer for some tasks while other take less.\nH. Fix this as well"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:26:54.252Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:74",
+  "kind": "command",
+  "file": null,
+  "content": "grep -n -i \"timeout\\|stall\\|max-turns\\|budget\\|idle\" docs/components/agents/README.md docs/components/engine/README.md docs/components/agents/claude-cli-reference.md docs/components/memory/README.md | head -40; grep -rn -i \"timeout\" src/harness --include=*.py | head -20"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:26:54.334Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:79",
+  "kind": "tool_result",
+  "file": null,
+  "content": "docs/components/agents/README.md:37:- Each role can have a timeout, in seconds, in the `[timeouts]` table of `harness.toml`. No role has a default timeout, because some agents run for a long time. Without a timeout, a role runs until it ends.\ndocs/components/agents/README.md:53:- **Stopping** on a timeout or a stop request: `SIGTERM` to `claude`, then `SIGKILL` to its process group after 10 second\n[... 3485 chars cut ...]\n. |\ndocs/components/agents/claude-cli-reference.md:155:| Spend | `--max-budget-usd` |\ndocs/components/agents/claude-cli-reference.md:177:- **Recorded:** 2026-10-09, Claude Code `2.1.295` on Linux with `bwrap` and `socat` installed, model `haiku`, about $0.03 for seven runs.\ndocs/components/agents/claude-cli-reference.md:233:- A process killed by a timeout\n(eval):1: no matches found: --include=*.py"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:27:00.624Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:88",
+  "kind": "command",
+  "file": null,
+  "content": "grep -n -A25 \"## Cost per role in a real run\" docs/components/agents/claude-cli-reference.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:27:00.668Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:89",
+  "kind": "tool_result",
+  "file": null,
+  "content": "116:## Cost per role in a real run\n117-\n118-The first end-to-end run of the [v0 plan](../../plans/v0.md#11-end-to-end), on 2026-10-09 with Claude Code `2.1.295`: one small feature spec on a toy Python repo, passed on the second attempt. Costs are the client-side estimates from `result`.\n119-\n120-| Role | Model | Turns | Cost | Time |\n121-|---|---|---|---|---|\n122-| planner | opus | 5 | $0.21 | 16 \n[... 905 chars cut ...]\n | 9 to 19 s |\n137-\n138-- The outlier is the first attempt of a spec that could not pass: the coder spent 123 turns optimising toward a check that could never succeed ([agents](README.md#open-questions)).\n139-- The reviewer stays a fifth to a third of the coder, as in the toy run.\n140-- A passing spec costs about $0.6 to $1.0 in all. The whole session used at most 11% of the five-hour window.\n141-"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:22.335Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:109",
+  "kind": "command",
+  "file": null,
+  "content": "git checkout -b unattended-runs && cat docs/plans/v0.md && cat ~/.claude/projects/-home-<user>-Projects-project-a/memory/commit-directly-to-main.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:22.399Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:114",
+  "kind": "tool_result",
+  "file": null,
+  "content": "Switched to a new branch 'unattended-runs'\n# v0 implementation plan\n\nHow [milestone v0](../product/milestones.md#v0-one-feature-spec-end-to-end) gets built: the order of work, what each step delivers, and how each step is proven. What v0 includes is owned by the milestones doc, and how each part behaves is owned by its component doc. This plan links to them and does not repeat them.\n\n## Exit crite\n[... 19272 chars cut ...]\ned `main` to it and deleted it. They want linear history with no feature branches. Later they moved the milestone work onto a `v0` branch and asked for commits there.\n\n**How to apply:** When the user says \"commit\" in project-a, check `git branch --show-current`. If it is `v0` (or another milestone branch), commit there. Ask before committing to a different branch. Never push unless asked."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:26.520Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:123",
+  "kind": "command",
+  "file": null,
+  "content": "wc -l docs/product/milestones.md docs/components/*/README.md docs/decisions/0016*.md docs/product/requirements.md docs/components/agents/claude-cli-reference.md; ls docs/decisions"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:26.557Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:124",
+  "kind": "tool_result",
+  "file": null,
+  "content": "    52 docs/product/milestones.md\n    92 docs/components/agents/README.md\n   100 docs/components/engine/README.md\n   113 docs/components/escalation/README.md\n   109 docs/components/memory/README.md\n   105 docs/components/specs/README.md\n    63 docs/components/spec-types/README.md\n   123 docs/components/telemetry/README.md\n    80 docs/components/tui/README.md\n   109 docs/components/verification/REA\n[... 484 chars cut ...]\ner.md\n0008-telemetry-jsonl-with-sqlite-index.md\n0009-sequential-dependency-ordered-queue.md\n0010-config-in-harness-toml.md\n0011-spec-approval-in-frontmatter.md\n0012-progress-file-in-worktree.md\n0013-agent-declares-new-files.md\n0014-reviewer-reads-change-through-git.md\n0015-inline-tui-on-event-stream.md\n0016-engine-child-process-detach-unattended.md\n0017-spec-state-replayed-from-events.md\nREADME.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:35.255Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:164",
+  "kind": "command",
+  "file": null,
+  "content": "find src/harness -name \"*.py\" | sort | tr '\\n' ' '; echo; cat src/harness/engine/run_mode.py; grep -rn \"isatty\\|not a terminal\" src/harness | head; grep -n \"kind\\|^##\" docs/components/telemetry/README.md | head -60"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:35.328Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:169",
+  "kind": "tool_result",
+  "file": null,
+  "content": "src/harness/agents/agent_request.py src/harness/agents/agent_result.py src/harness/agents/artefact_stream.py src/harness/agents/auth_status.py src/harness/agents/claude_command.py src/harness/agents/claude_driver.py src/harness/agents/cli_version.py src/harness/agents/coder_prompt.py src/harness/agents/coder_result.py src/harness/agents/command_runner.py src/harness/agents/context_request.py src/h\n[... 10105 chars cut ...]\ns](../../product/milestones.md)).\n70:| `attempt.started`, `attempt.finished` | engine | attempt number; outcome, failure kind |\n89:## Querying\n91:- `harness stats` prints fixed reports from the SQLite index: pass rate, attempts per spec, failure kinds, and tokens and time per spec type and role.\n94:## Failure taxonomy\n107:## Interfaces\n112:## Failure modes\n117:## Open questions\n121:## Related ADRs"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:37.704Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:177",
+  "kind": "command",
+  "file": null,
+  "content": "sed -n 58,106p docs/components/telemetry/README.md; cat src/harness/engine/stdin_watch.py src/harness/cli/run_command.py src/harness/cli/attended_command.py; grep -rn \"RunMode\\.\\|UNATTENDED\" src/harness | head -20"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:29:37.769Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:182",
+  "kind": "tool_result",
+  "file": null,
+  "content": "## Event kinds\n\nDerived from what each component already does. A kind whose feature arrives after v0 is first emitted with that feature ([milestones](../../product/milestones.md)).\n\n| Kind | Emitted by | Payload |\n|---|---|---|\n| `run.started`, `run.finished` | engine | mode, tracks; final status counts |\n| `run.detached` | engine | the specs parked as `waiting` by the switch to unattended |\n| `pr\n[... 3887 chars cut ...]\nrguments)\n    except NotATerminalError as error:\n        click.echo(f\"harness: {error}\", err=True)\n        raise click.exceptions.Exit(NOT_A_TERMINAL_EXIT_CODE) from error\n    raise click.exceptions.Exit(exit_code)\nsrc/harness/engine/engine_run.py:113:    context.logger.log(RunStarted(mode=RunMode.ATTENDED, tracks=list(loaded.tracks)))\nsrc/harness/engine/run_mode.py:6:    UNATTENDED = \"unattended\""
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:37.700Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:187",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Your triage answers are in. I'm now reading the component docs and code so I can record the decisions and write `docs/plans/v1.md` on a new branch, `unattended-runs`."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:39.353Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:188",
+  "kind": "command",
+  "file": null,
+  "content": "grep -n -A22 \"## What does not work and gaps\" docs/components/agents/claude-cli-reference.md; grep -n -B2 -A12 \"## Sandbox and permission probe\" docs/components/agents/claude-cli-reference.md | head -40; grep -n \"max_turns\\|max-turns\\|\\[timeouts\\]\\|timeouts\" src/harness/config/*.py src/harness/agents/settings.py src/harness/agents/claude_command.py"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:39.420Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:193",
+  "kind": "tool_result",
+  "file": null,
+  "content": "171-- Without the user settings the default model changed. The driver must always pass `--model`.\n172-\n173:## Sandbox and permission probe\n174-\n175-The G3 probe of the [v0 plan](../../plans/v0.md#decisions-made-while-planning): which settings keys enforce the [agent policy](../workspace/README.md#behaviour).\n176-\n177-- **Recorded:** 2026-10-09, Claude Code `2.1.295` on Linux with `bwrap` and `soca\n[... 468 chars cut ...]\nss.agents.policy_settings` from the policies in `harness.workspace.agent_policy`.\n180-\n181-### Keys that enforce\n182-\n183-| Key | Effect observed |\n184-|---|---|\n185-| `sandbox.enabled: true` | Bash writes outside the worktree fail with `read-only file system`, including the home folder and a sibling folder |\nsrc/harness/config/harness_config.py:12:    timeouts: TimeoutSettings = TimeoutSettings()"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:41.706Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:205",
+  "kind": "command",
+  "file": null,
+  "content": "sed -n 186,233p docs/components/agents/claude-cli-reference.md; grep -rn \"class TimeoutSettings\" -A12 src/harness"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:41.764Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:206",
+  "kind": "tool_result",
+  "file": null,
+  "content": "| `sandbox.failIfUnavailable: true` | Never triggered, kept so that a missing `bwrap` stops the run instead of running unsandboxed |\n| `sandbox.allowUnsandboxedCommands: false` | A Bash call with `dangerouslyDisableSandbox: true` still ran sandboxed |\n| `sandbox.autoAllowBashIfSandboxed: true` | The coder runs any command without a prompt. `false` for the reviewer, so only its allow rules run. |\n|\n[... 5536 chars cut ...]\n TimeoutSettings(ConfigTable):\nsrc/harness/agents/settings.py-27-    planner: PositiveInt | None = None\nsrc/harness/agents/settings.py-28-    coder: PositiveInt | None = None\nsrc/harness/agents/settings.py-29-    reviewer: PositiveInt | None = None\nsrc/harness/agents/settings.py-30-    spec_reviewer: PositiveInt | None = None\nsrc/harness/agents/settings.py-31-    utility: PositiveInt | None = None"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:30:55.892Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:211",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Now recording the triage decisions in the owning docs."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:03.802Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:212",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/verification/README.md",
+  "content": "--- old\n- **Baseline:** gates run once at the start commit, with the same rerun rule. Failures that were already there do not count against the spec. Their logs go to the spec's `baseline/gates/` folder ([memory](../memory/README.md#layout)).\n  - The comparison is per gate. A gate that failed at baseline does not count while it still fails, so it hides any new failure in it, such as a new failing test under a red `pytest`.\n  - The [run report](../escalation/README.md#behaviour) lists every gate that failed at baseline. Comparing per test is left for later.\n+++ new\n- **Baseline:** gates run once at the start commit, with the same rerun rule. Failures that were already there do not count against the spec. Their logs go to the spec's `baseline/gates/` folder ([memory](../memory/README.md#layout)).\n  - The comparison is per gate. A gate that failed at baseline does not count while it still fails, so it hides any new failure in it, such as a new failing test under a red `pytest`.\n  - The [r\n[... 486 chars cut ...]\naseline and hide every later failure in it, so the run refuses to start instead.\n  - The check runs once per run, after every queued track is prepared and before the first spec starts ([engine](../engine/README.md#behaviour)). It runs in each track's worktree, after the setup command.\n  - A gate's tool is the first word of its command, or the word after `uv run`.\n  - The tool must be installed in the project, not only on the machine. For the Python profile it must be in the worktree's `.venv/bin/`, because `uv run` falls back to the `PATH` when the project does not declare the tool, and the gates would then depend on the machine that runs them. Other tools must be found by `command -v` in the worktree.\n  - The refusal lists every missing tool per track and how to fix it, such as \"add `pyright` to the dev dependencies\".\n  - A gate that exits with 126 or 127 during a run (cannot execute, command not found) could not run. It is an infra error, never a baseline failure or a failed attempt."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:07.534Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:214",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/verification/README.md",
+  "content": "--- old\n| Profile | Gates | Setup | Test files | Tool cache |\n|---|---|---|---|---|\n| Python | `lint`: `uv run ruff check`, `format`: `uv run ruff format --check`, `typecheck`: `uv run pyright`, `test`: `uv run pytest` | `uv sync` | `tests/**`, `test_*.py`, `*_test.py` | `uv cache dir` |\n\n- The Python profile is detected by a `pyproject.toml` at the repo root. Its gates run through `uv run`, because `uv sync` installs the tools into the project's environment, not onto the `PATH`.\n+++ new\n| Profile | Gates | Setup | Test files | Tool cache | Nothing to check |\n|---|---|---|---|---|---|\n| Python | `lint`: `uv run ruff check`, `format`: `uv run ruff format --check`, `typecheck`: `uv run pyright`, `test`: `uv run pytest` | `uv sync` | `tests/**`, `test_*.py`, `*_test.py` | `uv cache dir` | `test`: exit 5 |\n\n- The Python profile is detected by a `pyproject.toml` at the repo root. Its gates run through `uv run`, because `uv sync` installs the tools into the project's environment, not onto the `PATH`. The project must therefore declare its gate tools as dev dependencies ([gate tools](#gates))."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:11.679Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:216",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/verification/README.md",
+  "content": "--- old\n- **No gates found** (no config and no stack detected): reported before any agent runs.\n\n## Open questions\n\n- Should a gate that cannot run at all count as a baseline failure? On the real repo of v0 step 11, `uv run pyright` failed to start because `pyright` was not installed (exit 2), and `pytest` found no tests on main (exit 5). Both were recorded as gates that failed at baseline. That hid `typecheck` on every spec, and `format`, `typecheck` and `test` on every new track, so only `lint` really checked those specs. One coder then added `pyright` as a dev dependency on its own, which was outside its spec.\n- The Python profile assumes `uv sync` installs the gate tools into the project's environment. When the project does not declare them, `uv run` falls back to the `PATH`. In step 11, `lint` and `format` ran the human's global `ruff`, so the gates depend on the machine they run on.\n+++ new\n- **No gates found** (no config and no stack detected): reported before any agent runs.\n- **A gate tool is missing:** the run refuses before any spec starts, with the missing tools in `engine.log`, on stderr and by [notification](../escalation/README.md#telegram). Found in v0 step 11, where a missing `pyright` and an empty test suite failed at baseline and hid `typecheck` and `test` on every spec ([gate tools](#gates)).\n\n## Open questions\n\nNone."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:15.578Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:231",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/workspace/README.md",
+  "content": "--- old\n  - The setup command runs outside the sandbox, through the shell, like a gate.\n+++ new\n  - The setup command runs outside the sandbox, through the shell, like a gate.\n  - **Setup output:** the untracked paths that appear while the setup command runs, such as `<package>.egg-info/`, are its output, not a change. They are recorded in `harness-setup.json`, and the clean check, leftover handling and the reset of a failed attempt leave them alone. A tracked file that setup changes, such as a rewritten lock file, is still a change. In v0 step 11 an `egg-info/` folder from `uv sync` made the clean check refuse every spec in two runs."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:18.418Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:233",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/workspace/README.md",
+  "content": "--- old\n  - The reset also removes untracked files that are not ignored. Ignored files, including the progress file, stay.\n+++ new\n  - The reset also removes untracked files that are not ignored. Ignored files, including the progress file, stay.\n  - **The next attempt starts fresh.** Only knowledge carries over, through the progress file and the findings, never the code. In v0 step 11, the coders of attempts 2 and 3 cherry-picked attempt 1's commit back by its hash and reused files from the CLI's temp folder. So after the reset the harness expires the reflog entries the attempt left on the worktree's `HEAD` and on the track branch, the coder prompt says that earlier attempts' code was discarded on purpose ([agents](../agents/README.md#roles)), and each attempt gets its own temp folder ([agents](../agents/README.md#driver))."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:21.108Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:235",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/workspace/README.md",
+  "content": "--- old\n- How does the clean check tell the setup command's own output apart from real changes? In v0 step 11, `uv sync` on a setuptools project wrote `<package>.egg-info/` into the worktree. The clean check then refused every spec, in two runs in a row, until the human committed a `.gitignore` entry on main. Running setup before the check is meant to catch a rewritten lock file, not build output.\n- Is a failed attempt's reset meant to be a fresh start? In step 11 the coder of attempts 2 and 3 cherry-picked attempt 1's commit back by its hash, which stays in the object store after the reset. It also reused files it had written to the CLI's temp folder outside the worktree ([reference](../agents/claude-cli-reference.md#what-does-not-work-and-gaps-against-adr-0005)). The progress file already carries knowledge across attempts, but carrying the code across was never designed.\n\n+++ new\n"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:22.615Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:249",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Now agents (coder limits, fresh-start prompt, temp folder)."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:28.172Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:250",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/agents/README.md",
+  "content": "--- old\n- Each role can have a timeout, in seconds, in the `[timeouts]` table of `harness.toml`. No role has a default timeout, because some agents run for a long time. Without a timeout, a role runs until it ends.\n- The coder's prompt lists the gates that will run, so it does not fail on predictable lint (v1 lesson 4).\n+++ new\n- **Limits:** each role can have a turn limit in the `[max_turns]` table and a timeout, in seconds, in the `[timeouts]` table of `harness.toml`. Only the coder has defaults: 80 turns and 1800 seconds. Other roles run until they end unless the human sets a limit.\n  - The turn limit is the main cap. It is passed as `--max-turns`, so it measures how much the agent works, not how slow the repo's tests are. A coder that hits it fails the attempt as `agent_error`, and stall detection takes over ([engine](../engine/README.md#behaviour)).\n  - The timeout is a backstop for a hung call. It is an infra error, so it never uses up an attempt.\n  - The defaults come from v0 step 11: normal coder calls took 19 to 38 turns and at most 134 seconds. The outlier took 123 turns, 24 minutes and $5.03 on a spec that could not pass, more than half the session's cost ([reference](claude-cli-reference.md#cost-per-role-in-a-real-run)). Every call records its turns and `terminal_reason` in `agent.finished`, so the defaults can be tuned from real runs.\n- The coder's prompt lists the gates that will run, so it does not fail on predictable lint (v1 lesson 4).\n- From the second attempt on, the coder's prompt says that the earlier attempts' code was discarded on purpose: the attempt starts from the start commit, and uses the progress file and the findings, never earlier commits, patches or temp files ([workspace](../workspace/README.md#behaviour))."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:30.527Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:252",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/agents/README.md",
+  "content": "--- old\n- The prompt goes in on stdin, not as an argument, because Linux limits one argument to 128 KiB.\n+++ new\n- The prompt goes in on stdin, not as an argument, because Linux limits one argument to 128 KiB.\n- **Temp folder:** each coder attempt gets an empty temp folder of its own, which is deleted when the attempt ends. Without it the CLI writes to `/tmp/claude-<uid>/`, which survives a failed attempt ([reference](claude-cli-reference.md#what-does-not-work-and-gaps-against-adr-0005)). Which environment variable moves the CLI's temp folder is confirmed by a probe before it is relied on."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:32.167Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:254",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/agents/README.md",
+  "content": "--- old\n- **Process timeout,** when the role has one: reported as an infra error with the partial output saved. It never crashes the harness (v1 lesson 3).\n+++ new\n- **Process timeout,** when the role has one (the coder always does by default): reported as an infra error with the partial output saved. It never crashes the harness (v1 lesson 3)."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:33.544Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:256",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/agents/README.md",
+  "content": "--- old\n\n- Should the coder have a default limit? With no timeout, one coder call in step 11 ran for 24 minutes, 123 turns and $5.03 on a spec that could not pass, more than half the session's cost ([reference](claude-cli-reference.md#cost-per-role-in-a-real-run)). A `[timeouts]` entry would cut it, but only when the human sets one.\n+++ new\n"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:35.912Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:273",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Now escalation, engine and telemetry."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:38.209Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:274",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/escalation/README.md",
+  "content": "--- old\n  - all open context requests\n  - tracks skipped because of a rebase conflict or a failed setup command ([workspace](../workspace/README.md#failure-modes))\n+++ new\n  - all open context requests\n  - each spec that could not start, such as on a dirty or locked worktree, with its reason ([engine](../engine/README.md#behaviour)). In v0 step 11 two runs started no spec, and their reports read \"None.\" in every section.\n  - tracks skipped because of a rebase conflict or a failed setup command ([workspace](../workspace/README.md#failure-modes))"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:42.305Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:276",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/escalation/README.md",
+  "content": "--- old\n- **When:** one message for each context request and each parked spec as it happens, and a summary at the end of the run.\n- **Answers:** a reply to a context request message is written under that request's `## Answer`. Replies sent while no run is active are picked up by the next `harness resume`. The bot does nothing else: v1's full Telegram mirror was feature creep.\n+++ new\n- **When:** one message for each context request and each parked spec as it happens, and a summary at the end of the run. A run refused before its queue, such as for a missing gate tool, sends its reason, because a detached run has no terminal to show it.\n- **Answers:** a reply to a context request message is written under that request's `## Answer`. Replies sent while no run is active are picked up by the next `harness resume`. The bot does nothing else: v1's full Telegram mirror was feature creep.\n  - The engine polls the Bot API's `getUpdates` while a run is active, and once at the start of `harness resume`. Telegram keeps updates for 24 hours, so an older reply is lost. The request file still takes the answer.\n  - Which message belongs to which request is kept in `.harness/telegram.json` ([memory](../memory/README.md#layout)).\n  - Only messages from the configured chat are read.\n- **Transport:** HTTPS calls to the Bot API with the standard library, so the notifier adds no dependency."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:43.844Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:278",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/escalation/README.md",
+  "content": "--- old\n## Open questions\n\n- Should the run report list specs that could not start? Such a spec goes back to `pending` with its reason only in `engine.log` ([engine](../engine/README.md#behaviour)). In v0 step 11, two runs started no spec because of a dirty worktree, and every section of their reports read \"None.\".\n+++ new\n## Open questions\n\nNone."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:45.993Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:280",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/engine/README.md",
+  "content": "--- old\n- **Refusal:** the run refuses to start, with the reason, when preflight fails, the requested track has no folder under `specs/`, or a queued spec has no gates ([verification](../verification/README.md#failure-modes)).\n+++ new\n- **Refusal:** the run refuses to start, with the reason, when preflight fails, the requested track has no folder under `specs/`, a queued spec has no gates, or a gate tool is missing ([verification](../verification/README.md#gates)).\n  - The gate tool check needs each track's worktree with its setup command run, so every queued track is prepared before the first spec starts."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:47.727Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:282",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/engine/README.md",
+  "content": "--- old\n- **A spec that cannot start** (a dirty or locked worktree, or a failed setup command) goes back to `pending` for this run, with the reason in `engine.log`.\n+++ new\n- **A spec that cannot start** (a dirty or locked worktree, or a failed setup command) goes back to `pending` for this run, with the reason in `engine.log`, a `spec.start_failed` event and the [run report](../escalation/README.md#behaviour)."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:48.966Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:284",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/telemetry/README.md",
+  "content": "--- old\n| `spec.status_changed` | engine | from, to, reason |\n+++ new\n| `spec.status_changed` | engine | from, to, reason |\n| `spec.start_failed` | engine | reason |\n| `gate_tools.checked` | verification | track, missing tool per gate |"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:51.533Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:298",
+  "kind": "command",
+  "file": null,
+  "content": "grep -n -A40 \"^## Layout\" docs/components/memory/README.md | head -60; grep -n \"harness_config\\|class HarnessConfig\" -A14 src/harness/config/harness_config.py"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:51.582Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:303",
+  "kind": "tool_result",
+  "file": null,
+  "content": "41:## Layout\n42-\n43-`.harness/` lives in the target repo's main checkout. The harness adds it to the repo's `.git/info/exclude`, so git ignores it without any edit to the human's `.gitignore`. The names below are final for v0: the first end-to-end run wrote exactly these. A file appears only when there is something to put in it, so a run without engine errors has no `engine.log`, and an attempt wi\n[... 1846 chars cut ...]\n\n79-    prompt.md\n80-    output.jsonl                  spec reviewer agent stream\n81-    findings.json\n9:class HarnessConfig(ConfigTable):\n10-    engine: EngineSettings = EngineSettings()\n11-    models: ModelSettings = ModelSettings()\n12-    timeouts: TimeoutSettings = TimeoutSettings()\n13-    gates: GateCommands = Field(default_factory=dict[str, str])\n14-    stack: StackSettings = StackSettings()"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:55.321Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:308",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/memory/README.md",
+  "content": "--- old\n  requests/<track>-<spec>.md      open context requests, format owned by escalation\n\n+++ new\n  requests/<track>-<spec>.md      open context requests, format owned by escalation\n  telegram.json                   which Telegram message belongs to which request, owned by escalation\n  tmp/<track>/                    the coder's temp folder for the current attempt, emptied when it ends, owned by agents\n"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:56.805Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:310",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/agents/README.md",
+  "content": "--- old\n- **Temp folder:** each coder attempt gets an empty temp folder of its own, which is deleted when the attempt ends.\n+++ new\n- **Temp folder:** each coder attempt gets an empty temp folder of its own at `.harness/tmp/<track>/` ([memory](../memory/README.md#layout)), writable in the sandbox and emptied when the attempt ends."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:59.221Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:328",
+  "kind": "command",
+  "file": null,
+  "content": "grep -rn \"\\[timeouts\\]\" docs --include=*.md | grep -v \"plans/v0\""
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:31:59.255Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:329",
+  "kind": "tool_result",
+  "file": null,
+  "content": "(eval):1: no matches found: --include=*.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:00.913Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:336",
+  "kind": "command",
+  "file": null,
+  "content": "grep -rn \"timeouts\" docs | grep -v \"plans/v0\""
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:00.961Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:337",
+  "kind": "tool_result",
+  "file": null,
+  "content": "docs/components/agents/README.md:37:- **Limits:** each role can have a turn limit in the `[max_turns]` table and a timeout, in seconds, in the `[timeouts]` table of `harness.toml`. Only the coder has defaults: 80 turns and 1800 seconds. Other roles run until they end unless the human sets a limit.\ndocs/history/v1-analysis.md:33:3. **Gate timeouts crash the harness.** A `TimeoutExpired.stdout` byte\n[... 461 chars cut ...]\nlimit in the [engine](../components/engine/README.md) and notifications in [escalation](../components/escalation/README.md). Secrets come from environment variables, never from `harness.toml`.\ndocs/architecture/design-principles.md:8:4. **Infra errors are not agent failures.** Usage limits, API errors and timeouts are classified and handled apart from the agent's work, and never use up an attempt."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:02.991Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:340",
+  "kind": "command",
+  "file": null,
+  "content": "sed -i 's/models and timeouts in \\[agents\\]/models, turn limits and timeouts in [agents]/' docs/architecture/overview.md && grep -n \"turn limits\" docs/architecture/overview.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:03.060Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:345",
+  "kind": "tool_result",
+  "file": null,
+  "content": "77:Each target repo can have a `harness.toml` at its root, committed with the repo ([ADR 0010](../decisions/0010-config-in-harness-toml.md)). Each component owns its own table and documents its keys: gates and the stack profile in [verification](../components/verification/README.md), models, turn limits and timeouts in [agents](../components/agents/README.md), the attempt limit in the [engine](../components/engine/README.md) and notifications in [escalation](../components/escalation/README.md). Secrets come from environment variables, never from `harness.toml`."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:06.785Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:356",
+  "kind": "reasoning",
+  "file": null,
+  "content": "The triage decisions are recorded in the component docs. Next I'm writing the v1 milestone and the plan."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:13.711Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:357",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/product/milestones.md",
+  "content": "--- old\n## After v0\n\nIn this order:\n\n1. Unattended mode, detaching, and Telegram\n2. The `bugfix` spec type\n+++ new\n## v1: unattended runs\n\nA run that nobody watches. The human starts it, walks away, and comes back to commits, a report and Telegram messages, with context requests answered from a phone. It also fixes what the v0 real-repo runs showed would break such a run. How it gets built is in the [v1 implementation plan](../plans/v1.md).\n\n**Status:** planned.\n\n**In**\n\n- Unattended mode ([R6](requirements.md#r6-attended-and-unattended-runs)): a context request parks its spec as `waiting`, and the run goes on with independent specs.\n- Detaching ([ADR 0016](../decisions/0016-engine-child-process-detach-unattended.md)): `q` in the [tui](../components/tui/README.md) offers stop or detach, a closed pipe makes the run unattended instead of stopping it, `harness run --detach` starts a run with no tui, and `harness run` without a terminal runs unattended from the start.\n- The Telegram notifi\n[... 7 chars cut ...]\nh answers by reply ([escalation](../components/escalation/README.md#telegram)).\n- The fixes from the v0 real-repo runs:\n  - the gate tool check before any spec starts, and gate tools that must be installed in the project ([verification](../components/verification/README.md#gates))\n  - setup output that no longer makes the worktree dirty ([workspace](../components/workspace/README.md#behaviour))\n  - a fresh start for every attempt ([workspace](../components/workspace/README.md#behaviour))\n  - a default turn limit and timeout for the coder ([agents](../components/agents/README.md#roles))\n  - specs that could not start listed in the run report ([escalation](../components/escalation/README.md#behaviour))\n\n**Out until a later milestone:** everything else from the v0 list above, including plan review, `harness clean` and `harness watch`. A detached run is followed through `harness status`, Telegram, the request files and the run report.\n\n## After v1\n\nIn this order:\n\n1. The `bugfix` spec type"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:16.513Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:359",
+  "kind": "command",
+  "file": null,
+  "content": "python3 - <<'EOF'\np='docs/product/milestones.md'\ns=open(p).read()\ns=s.replace(\"\"\"1. The `bugfix` spec type\n3. The other stack profiles\n4. The SQLite index and analysis across runs\n5. The `refactor` and `tests` spec types\n6. CI mode\n\nPlan review, `harness clean` and the later tui views are not placed yet.\n\n## Open questions\n\n- Where do plan review, `harness clean` and the later tui views go in the order after v0?\"\"\",\"\"\"1. The `bugfix` spec type\n2. The other stack profiles\n3. The SQLite index and analysis across runs\n4. The `refactor` and `tests` spec types\n5. CI mode\n\nPlan review, `harness clean` and the later tui views are not placed yet.\n\n## Open questions\n\n- Where do plan review, `harness clean` and the later tui views go in the order after v1?\"\"\")\nopen(p,'w').write(s)\nEOF\nsed -n 36,75p docs/product/milestones.md"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:16.575Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:360",
+  "kind": "tool_result",
+  "file": null,
+  "content": "## v1: unattended runs\n\nA run that nobody watches. The human starts it, walks away, and comes back to commits, a report and Telegram messages, with context requests answered from a phone. It also fixes what the v0 real-repo runs showed would break such a run. How it gets built is in the [v1 implementation plan](../plans/v1.md).\n\n**Status:** planned.\n\n**In**\n\n- Unattended mode ([R6](requirements.md\n[... 1401 chars cut ...]\ne request files and the run report.\n\n## After v1\n\nIn this order:\n\n1. The `bugfix` spec type\n2. The other stack profiles\n3. The SQLite index and analysis across runs\n4. The `refactor` and `tests` spec types\n5. CI mode\n\nPlan review, `harness clean` and the later tui views are not placed yet.\n\n## Open questions\n\n- Where do plan review, `harness clean` and the later tui views go in the order after v1?"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:30.174Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:374",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Adding the resume rule for unanswered waiting specs to the engine doc, and `--detach` to the tui doc."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:32.070Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:375",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/engine/README.md",
+  "content": "--- old\n  - `harness resume` queues every track that has an open execution, and refuses with \"nothing to resume\" when there is none.\n+++ new\n  - `harness resume` queues every track that has an open execution, and refuses with \"nothing to resume\" when there is none.\n  - In an unattended run, a `waiting` spec whose context request is still unanswered stays `waiting` and is skipped, with its dependents `blocked`. The run never waits for an answer. In an attended run the tui asks for it."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:32:35.555Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:377",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/components/tui/README.md",
+  "content": "--- old\n- **Quitting mid-run.** `q` asks whether to stop the run or detach. Stop sends `SIGINT`. Detach closes the pipe, and the run carries on unattended. Closing the terminal counts as detach. v0 has no detach ([milestones](../../product/milestones.md#v0-one-feature-spec-end-to-end)).\n+++ new\n- **Quitting mid-run.** `q` asks whether to stop the run or detach. Stop sends `SIGINT`. Detach closes the pipe, and the run carries on unattended. Closing the terminal counts as detach. v0 has no detach ([milestones](../../product/milestones.md#v0-one-feature-spec-end-to-end)).\n- **Starting detached.** `harness run --detach` and `harness resume --detach` start the engine with no tui and its stdin closed, print the run id and where the run report will be, and return at once. When stdout is not a terminal, `harness run` and `harness resume` start no tui either: they run unattended in the foreground, print the [plain](#behaviour) progress lines, and exit with the engine's exit code."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:14.050Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:393",
+  "kind": "edit",
+  "file": "~/Projects/project-a/docs/plans/v1.md",
+  "content": "# v1 implementation plan\n\nHow [milestone v1](../product/milestones.md#v1-unattended-runs) gets built: the order of work, what each step delivers, and how each step is proven. What v1 includes is owned by the milestones doc, and how each part behaves is owned by its component doc. This plan links to them and does not repeat them.\n\n## Exit criteria\n\nv1 is done when all of these hold:\n\n1. A run with a missing gate tool refuses before any spec starts and names each missing tool and its fix. With the tools declared, no gate fails at baseline only because it could not run.\n2. A setup command that writes build output, such as `egg-info/`, does not stop any spec at the clean check.\n3. The second attempt of a spec cannot reach the first attempt's code: no reflog entry and no temp file of it is left.\n4. A coder past its turn limit fails its attempt as `agent_error`, and the limit and timeout can be changed in `harness.toml`.\n5. A run in which no spec could start lists each one with its reason in\n[... 10339 chars cut ...]\nin their owning docs. If a usage limit is hit, close the open question in [agents](../components/agents/README.md#open-questions).\n\n## Risks\n\n- **A reply is lost after 24 hours.** Telegram drops updates that nobody fetched, so a reply sent long after a run ends never reaches the file. The request file still takes the answer, and the next `harness resume` polls first.\n- **The CLI may not let its temp folder move.** Step 0 finds out first. If no variable works, the harness empties `/tmp/claude-<uid>/<worktree path>/` after a failed attempt instead, and never touches other sessions' folders.\n- **80 turns may be too few for large specs.** It is about twice the most that a normal coder call used in v0 step 11, on a small repo. Every hit is in the events, and the human can raise it per repo.\n- **An unattended run has no human to see a crash.** The engine already logs to `engine.log`, and step 8 sends the end-of-run summary. A run that dies without one is noticed only by the missing message.\n"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:19.494Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:404",
+  "kind": "command",
+  "file": null,
+  "content": "sed -i 's#\\[v0\\](plans/v0.md) |#[v0](plans/v0.md), [v1](plans/v1.md) |#' docs/README.md && grep -n \"plans/\" docs/README.md; sed -i 's#If no variable works, the harness empties `/tmp/claude-<uid>/<worktree path>/` after a failed attempt instead, and never touches other sessions'\"'\"' folders.#If no variable works, the harness empties only the folder the CLI made for this worktree after a failed attempt, and never touches the folders of other sessions.#' docs/plans/v1.md && grep -n \"If no variable\" docs/plans/v1.md; ls tests | head -30"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:19.577Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:405",
+  "kind": "tool_result",
+  "file": null,
+  "content": "24:| `plans/` | How each milestone gets built: order of work, steps and exit criteria. [v0](plans/v0.md), [v1](plans/v1.md) |\n136:- **The CLI may not let its temp folder move.** Step 0 finds out first. If no variable works, the harness empties only the folder the CLI made for this worktree after a failed attempt, and never touches the folders of other sessions.\n__init__.py\n__pycache__\nagents\ncli\nconfig\nconftest.py\nend_to_end\nengine\nescalation\nfakes\nfixtures\nmemory\nspec_types\nspecs\ntelemetry\ntui\nverification\nworkspace"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:24.914Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:413",
+  "kind": "command",
+  "file": null,
+  "content": "python3 - <<'EOF'\nimport re,os\ndef slug(h): \n    h=h.strip().lower(); h=re.sub(r'[^\\w\\- ]','',h); return h.replace(' ','-')\nfiles=[\"docs/plans/v1.md\",\"docs/product/milestones.md\",\"docs/components/verification/README.md\",\"docs/components/workspace/README.md\",\"docs/components/agents/README.md\",\"docs/components/escalation/README.md\",\"docs/components/engine/README.md\",\"docs/components/tui/README.md\",\"docs/components/memory/README.md\",\"docs/components/telemetry/README.md\"]\nfor f in files:\n    for m in re.finditer(r'\\]\\(([^)#]*)(#[^)]*)?\\)', open(f).read()):\n        path,anchor=m.group(1),m.group(2)\n        if path.startswith('http'): continue\n        target=os.path.normpath(os.path.join(os.path.dirname(f),path)) if path else f\n        if not os.path.exists(target): print(f,\"missing\",path); continue\n        if anchor and target.endswith('.md'):\n            heads={slug(h) for h in re.findall(r'^#+ (.*)$',open(target).read(),re.M)}\n            if anchor[1:] not in heads: print(f,\"bad anchor\",path+anchor)\nEOF"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:24.988Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:414",
+  "kind": "tool_result",
+  "file": null,
+  "content": "(Bash completed with no output)"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:26.296Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:421",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Links check out. Updating CLAUDE.md and the branch memory."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:29.216Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:422",
+  "kind": "edit",
+  "file": "~/Projects/project-a/CLAUDE.md",
+  "content": "--- old\n- CURRENT_PHASE: v1 planning\n- Next:\n  1. Triage the open questions the v0 real-repo runs added to workspace, verification, agents, escalation and engine: blocks v1, fix now, or later.\n  2. Define the next milestone (unattended mode, detaching and Telegram, per [milestones](docs/product/milestones.md#after-v0)) and write `docs/plans/v1.md` in the shape of the v0 plan.\n+++ new\n- CURRENT_PHASE: v1 planning, plan drafted and awaiting the human's approval\n- v1 work happens on the branch `unattended-runs`.\n- Next:\n  1. The human reviews [the v1 plan](docs/plans/v1.md). Once approved, set CURRENT_PHASE to v1 implementation.\n  2. Build it step by step. Steps 0, 1, 2, 5 and 6 can start in parallel."
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:32.181Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:424",
+  "kind": "edit",
+  "file": "~/.claude/projects/-home-<user>-Projects-project-a/memory/commit-directly-to-main.md",
+  "content": "---\nname: commit-directly-to-main\ndescription: \"In project-a commit on the milestone branch (v1: unattended-runs), never a new feature branch\"\nmetadata:\n  type: feedback\n---\n\nIn this repo, commit on the milestone branch the user is working on, and never create a separate feature branch. For milestone v0 that was `v0`. For v1 it is `unattended-runs`: on 2026-10-15 the user asked for a descriptive name instead of plain `v1`.\n\n**Why:** Earlier, when I committed to a new branch, the user fast-forwarded `main` to it and deleted it. They want linear history, with one branch per milestone that gets merged into main.\n\n**How to apply:** When the user says \"commit\" in project-a, check `git branch --show-current`. If it is the milestone branch, commit there. Ask before committing to a different branch. Name new milestone branches descriptively, not just `vN`. Never push unless asked.\n"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:34.689Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:438",
+  "kind": "command",
+  "file": null,
+  "content": "sed -i 's#^- \\[Commit on the working branch\\](commit-directly-to-main.md) \u2014 .*#- [Commit on the milestone branch](commit-directly-to-main.md) \u2014 commit on the milestone branch (v1: unattended-runs), never a feature branch#' ~/.claude/projects/-home-<user>-Projects-project-a/memory/MEMORY.md && git status --short && git diff --stat"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:34.776Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:439",
+  "kind": "tool_result",
+  "file": null,
+  "content": " M CLAUDE.md\n M docs/README.md\n M docs/architecture/overview.md\n M docs/components/agents/README.md\n M docs/components/engine/README.md\n M docs/components/escalation/README.md\n M docs/components/memory/README.md\n M docs/components/telemetry/README.md\n M docs/components/tui/README.md\n M docs/components/verification/README.md\n M docs/components/workspace/README.md\n M docs/product/milestones.md\n?? do\n[... 317 chars cut ...]\n +++++++--\n docs/components/memory/README.md       |  2 ++\n docs/components/telemetry/README.md    |  2 ++\n docs/components/tui/README.md          |  1 +\n docs/components/verification/README.md | 19 ++++++++++++------\n docs/components/workspace/README.md    |  4 ++--\n docs/product/milestones.md             | 35 ++++++++++++++++++++++++++--------\n 12 files changed, 71 insertions(+), 29 deletions(-)"
+ },
+ {
+  "session_id": "97308952-6950-4d1d-81e9-e33a6657b747",
+  "project": "~/Projects/project-a",
+  "timestamp": "2026-10-15T11:33:45.215Z",
+  "agent_id": null,
+  "transcript_ref": "<transcript>:447",
+  "kind": "reasoning",
+  "file": null,
+  "content": "I've drafted the v1 plan and written your triage decisions into the owning docs. Nothing is committed yet. It's all on a new branch, `unattended-runs`, since you asked for a name other than plain `v1`. I checked that the links and anchors in the edited docs resolve; the code gates weren't run, since only docs changed.\n\n**Where each answer went:**\n- **A + B (gate tools):** before any spec starts, the harness prepares every track, then checks each gate's tool. A Python tool has to be installed in the project's own environment, not only somewhere on your machine. If a tool is missing, the run refuses and names the tool and how to fix it. An empty test suite now passes at baseline instead of hiding the `test` gate. That's in `docs/components/verification/README.md`.\n- **C (setup output):** files that appear while the setup command runs, like `egg-info/`, are recorded and left alone. A rewritten lock file still counts as a change. That's in `docs/components/workspace/README.md`.\n- **D (fres\n[... 791 chars cut ...]\n `harness run --detach` and `harness resume --detach` start a run with no terminal UI and return at once.\n- **`harness watch` stays out of v1.** You follow a detached run through `harness status`, Telegram, the request files and the report.\n- **Telegram replies:** the harness reads replies only while a run is active and at the start of `harness resume`. Telegram drops unread replies after 24 hours, but answering in the request file still works.\n- **Real-repo run:** like v0, the last step is an overnight detached run on one of your repos. You name the repo and the specs when that step starts.\n\nThe plan is in `docs/plans/v1.md`: ten steps with ten exit criteria, starting with three quick checks of how the `claude` CLI behaves. Five steps (0, 1, 2, 5 and 6) can start in parallel, so once you approve I'll split them across subagents.\n\n**What I need from you:**\n1. Review and approve `docs/plans/v1.md`, or tell me what to change.\n2. Should I commit these doc changes on `unattended-runs` now?"
+ }
+]

@@ -12,5 +12,23 @@
 | **Notifier** | Send desktop notifications | `notify(concepts)` through `notify-send` |
 | **Tutor pane** | TUI for browsing concepts and reading lessons | Textual app ([0009](../decisions/0009-textual-tui.md)), uses the store and the runner. Shows cached lessons and regenerates them only on request ([0017](../decisions/0017-lesson-cache.md)). Keeps the follow-up thread per lesson and rebuilds the full prompt on every question ([0012](../decisions/0012-stateless-follow-ups.md)) |
 
+## Claude runner flags
+Every call runs from the data directory with this flag set ([0022](../decisions/0022-claude-p-flag-set.md)):
+
+```
+claude -p --model <model> --output-format json \
+  --tools "" --setting-sources "" --strict-mcp-config \
+  --no-session-persistence --system-prompt <prompt> [--json-schema <schema>]
+```
+
+Detection passes `--json-schema` and reads the `structured_output` field ([0023](../decisions/0023-structured-detection-output.md)). The prompt goes in on stdin, because `--tools` takes a variable number of values and would swallow a positional prompt.
+
 ## Recursion guard
-The Claude runner sets an environment variable (for example `TUTOR_AGENT_INTERNAL=1`) on every `claude -p` call. The hook entry exits at once if it sees that variable. A second option is to start `claude -p` with hooks disabled through settings. Both are to be verified in the spike.
+Two layers, both verified in M0 ([0022](../decisions/0022-claude-p-flag-set.md)):
+1. `--setting-sources ""` loads no settings, so no hooks run for tutor calls.
+2. The runner sets `TUTOR_AGENT_INTERNAL=1`. The hook entry exits at once if it sees it.
+
+## Hook entry
+- Handles `Stop` (main transcript) and `SubagentStop` (subagent transcript) ([0021](../decisions/0021-subagentstop-trigger.md)).
+- Starts the detector with `subprocess.Popen(..., start_new_session=True)` and stdio set to `DEVNULL`. M0 confirmed the detector keeps running after the session exits, and that it authenticates with the existing Claude Code login.
+- Keep its imports minimal: Python start-up is most of its run time.

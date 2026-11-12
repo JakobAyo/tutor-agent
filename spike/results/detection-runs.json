@@ -1,0 +1,372 @@
+[
+ {
+  "model": "haiku",
+  "batch": "harness-gates-python",
+  "ms": 12277,
+  "cost_usd": 0.00437774,
+  "input_tokens": 17833,
+  "output_tokens": 1989,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Infra errors versus task failures",
+     "category": "pattern",
+     "summary": "Failures caused by the environment, such as timeouts, usage limits, missing binaries or API errors, are classified separately from the agent's own work so they do not count against retry budgets or get reported as failed attempts.",
+     "why_here": "The user's timeout question and the gate-tool fix both required deciding that a timeout or a gate that cannot execute is an infra error that never uses up an attempt.",
+     "event_index": 28,
+     "reuses_known": false
+    },
+    {
+     "name": "Turn budget as primary cap, wall-clock timeout as backstop",
+     "category": "trade-off",
+     "summary": "For non-deterministic LLM agents, a cap on the number of agent turns measures how much work is done, while a wall-clock timeout only catches a hung process, because elapsed time varies with the machine and the test suite.",
+     "why_here": "The user said they did not know what timeout to set because agents take variable time, and the agent answered by making turns the main limit and the timeout a backstop, tuned from recorded real-run data.",
+     "event_index": 26,
+     "reuses_known": false
+    },
+    {
+     "name": "Baseline failure differencing in test gates",
+     "category": "testing",
+     "summary": "Running the quality gates once on the starting commit records pre-existing failures so that only new failures count against a change, at the cost of hiding any new failure inside a gate that is already red.",
+     "why_here": "The agent edited the verification doc to add the trade-off and the failure mode where a gate that cannot run (missing pyright, empty pytest suite) was wrongly recorded as a baseline failure and hid later checks.",
+     "event_index": 19,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "sonnet",
+  "batch": "harness-gates-python",
+  "ms": 7796,
+  "cost_usd": 0.076664,
+  "input_tokens": 17812,
+  "output_tokens": 542,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Preflight validation (fail fast before work starts)",
+     "category": "pattern",
+     "summary": "Verify all required preconditions, such as installed tools, before starting expensive work, so the run refuses early with an actionable message instead of failing or giving misleading results midway.",
+     "why_here": "A missing gate tool like pyright was recorded as a baseline failure and silently hid checks on every spec, so the agent designed a check that refuses the run before any spec starts.",
+     "event_index": 19,
+     "reuses_known": false
+    },
+    {
+     "name": "Separating infra errors from task failures",
+     "category": "trade-off",
+     "summary": "Classify failures of the environment (timeouts, command not found, exit 126/127) apart from failures of the work itself, so they do not consume retry budget or pollute baselines.",
+     "why_here": "The agent made gate exits of 126/127 and coder timeouts infra errors that never use up an attempt or count as baseline failures.",
+     "event_index": 19,
+     "reuses_known": false
+    },
+    {
+     "name": "Layered resource limits with a primary cap and a backstop",
+     "category": "trade-off",
+     "summary": "Bound a non-deterministic process with a work-based limit (turn count) as the main cap, plus a time-based timeout only as a backstop for hangs, with defaults taken from observed data and made configurable.",
+     "why_here": "The user did not know what timeout to pick for variable-length agents, so the agent used an 80-turn default cap, a 1800s backstop, and numbers from real run costs.",
+     "event_index": 26,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "haiku",
+  "batch": "ics-meeting-widget",
+  "ms": 13714,
+  "cost_usd": 0.00765214,
+  "input_tokens": 33540,
+  "output_tokens": 2255,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Helper process as data bridge (JSON on stdout, single exit path)",
+     "category": "pattern",
+     "summary": "A UI process runs an external helper on a timer and reads a fixed output contract (here one JSON object on stdout), so the UI never parses raw input and the helper always reports errors as data instead of crashing.",
+     "why_here": "The QML widget needed calendar parsing that QML/JS can't do well, so the agent split it into a Python script that always prints one JSON object and exits 0, and a singleton service that consumes it through Process.",
+     "event_index": 29,
+     "reuses_known": false
+    },
+    {
+     "name": "Recurrence expansion at read time (store rules, query a time window)",
+     "category": "mechanism",
+     "summary": "Calendar data stores recurrence rules (RRULE, EXDATE, RECURRENCE-ID overrides) rather than every occurrence, so occurrences are generated on demand for a requested time window and filtered by status such as cancelled.",
+     "why_here": "To show what is next, the helper expands recurring Outlook meetings for a window of now minus a lookbehind to now plus the lookahead, instead of trying to read individual events from the file.",
+     "event_index": 29,
+     "reuses_known": false
+    },
+    {
+     "name": "Test doubles by shadowing binaries on PATH",
+     "category": "testing",
+     "summary": "To test code that shells out to a program, you put a fake executable earlier on PATH that logs its arguments, so the real side effect never happens and you can assert on the calls.",
+     "why_here": "The agent verified reminder notifications without popping real desktop alerts by placing a stub notify-send ahead of the real one on PATH and reading back the logged calls.",
+     "event_index": 84,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "sonnet",
+  "batch": "ics-meeting-widget",
+  "ms": 8323,
+  "cost_usd": 0.140002,
+  "input_tokens": 33519,
+  "output_tokens": 593,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Helper subprocess emitting JSON with graceful-degradation contract",
+     "category": "architecture",
+     "summary": "Delegate hard work to an external script that always exits 0 and prints one JSON envelope (ok, stale, error, data), so the caller has a single code path and failures become data.",
+     "why_here": "The Python fetch_calendar.py script handles ICS recurrence and time zones, and prints {ok,stale,error,events}; the QML service just parses it and falls back to a cached copy when offline.",
+     "event_index": 29,
+     "reuses_known": false
+    },
+    {
+     "name": "Use a mature library instead of reimplementing a complex spec",
+     "category": "trade-off",
+     "summary": "Standards like iCalendar (RRULE, EXDATE, Windows time zones, DST) have many edge cases, so adopting a tested library beats hand-rolling a parser, at the cost of a runtime dependency.",
+     "why_here": "ADR-0005 chose Python icalendar and recurring-ical-events over parsing ICS in QML/JS, and the test ICS verified Windows TZ names, recurrence and cancelled events.",
+     "event_index": 93,
+     "reuses_known": false
+    },
+    {
+     "name": "Isolated end-to-end testing with stubs and temp config",
+     "category": "testing",
+     "summary": "Test a program by redirecting its config directory, generating time-relative fixtures, and stubbing external commands via PATH so no real side effects occur.",
+     "why_here": "The agent used XDG_CONFIG_HOME pointing at a scratch dir, a generated ICS relative to now, and a fake notify-send on PATH to verify reminders fire once.",
+     "event_index": 84,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "haiku",
+  "batch": "qml-animation-widget",
+  "ms": 8192,
+  "cost_usd": 0.00241534,
+  "input_tokens": 10256,
+  "output_tokens": 1095,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Declarative property bindings driving implicit animation",
+     "category": "mechanism",
+     "summary": "A property is defined as a formula over other properties, so it re-evaluates whenever its inputs change, and a Behavior can animate each change instead of letting it jump.",
+     "why_here": "The Drop's whole open/close comes from one `progress` binding to `open` wrapped in a `Behavior`, so closing is the same animation run in reverse.",
+     "event_index": 22,
+     "reuses_known": false
+    },
+    {
+     "name": "Wayland layer-shell overlay windows with empty input regions",
+     "category": "infra",
+     "summary": "Layer-shell lets a program place a surface on a compositor layer (such as above all windows), and an empty input region makes it click-through so it never intercepts mouse input.",
+     "why_here": "The overlay has to sit above every window at the bottom of the screen without blocking clicks, so shell.qml sets WlrLayershell.layer, exclusionMode, and an empty Region mask.",
+     "event_index": 20,
+     "reuses_known": false
+    },
+    {
+     "name": "Polling versus event-driven file watching",
+     "category": "trade-off",
+     "summary": "Polling re-reads a file on a fixed timer, which is simple and robust but adds latency and wasted reads, while watching the file with inotify-style notifications reacts instantly but needs more machinery.",
+     "why_here": "VoiceSource reads hyprwhspr's status and level files on a 50 ms Timer even though FileView offers watchChanges, which is a trade-off the agent made without explaining it.",
+     "event_index": 21,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "sonnet",
+  "batch": "qml-animation-widget",
+  "ms": 7515,
+  "cost_usd": 0.046176,
+  "input_tokens": 10235,
+  "output_tokens": 524,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Single progress value driving reversible animation",
+     "category": "pattern",
+     "summary": "Drive the whole animation from one normalized 0..1 property that follows a boolean state, with a Behavior smoothing changes, so the closing animation is the opening one run backwards.",
+     "why_here": "The agent made `progress` follow `open` with a Behavior, so the rise and fill phases derive from it and closing needs no separate animation.",
+     "event_index": 22,
+     "reuses_known": false
+    },
+    {
+     "name": "Declarative bindings and reactive properties",
+     "category": "mechanism",
+     "summary": "In QML, property expressions are live formulas that re-evaluate when their dependencies change, and each property emits a changed signal, so UI state flows from data without manual update code.",
+     "why_here": "The window's `visible: voice.recording || drop.progress > 0` and the data passed into Drop rely on bindings, which keep the window mapped until the close animation finishes.",
+     "event_index": 20,
+     "reuses_known": false
+    },
+    {
+     "name": "Polling files as an IPC data source",
+     "category": "architecture",
+     "summary": "A process can consume state from another by repeatedly re-reading small status files in the runtime directory, where file presence or contents signal state, with a Timer driving reloads.",
+     "why_here": "hyprwhspr exposes recording_status and audio_level files, so VoiceSource reloads them every 50ms with FileView and treats a missing file as 'not recording'.",
+     "event_index": 21,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "haiku",
+  "batch": "subagent",
+  "ms": 10915,
+  "cost_usd": 0.003980340000000001,
+  "input_tokens": 17146,
+  "output_tokens": 1469,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "before/after snapshot diffing for output attribution",
+     "category": "pattern",
+     "summary": "Attribute files to a step by listing the state before and after the step runs and treating the difference as what that step produced.",
+     "why_here": "The setup command's untracked output is identified by comparing the untracked-file listing before setup against the listing after it, so only paths setup created get recorded.",
+     "event_index": 40,
+     "reuses_known": false
+    },
+    {
+     "name": "escaping glob syntax to build literal exclude patterns",
+     "category": "mechanism",
+     "summary": "Git exclude and pathspec arguments are glob patterns, so a literal file name containing characters like * ? [ or space must be backslash-escaped before it is passed in, or it matches the wrong files.",
+     "why_here": "Egg-info file names contain '[', '*' and spaces, so the reset builds an escaped literal --exclude for each recorded path so git clean keeps exactly those files.",
+     "event_index": 46,
+     "reuses_known": false
+    },
+    {
+     "name": "characterising an external tool with a throwaway probe test",
+     "category": "testing",
+     "summary": "Before relying on a tool's behaviour, run it in a disposable test repository and inspect its real output to confirm the semantics the code depends on.",
+     "why_here": "The agent ran a probe test against real git to see how ls-files, clean and exclude handle nested egg-info paths before writing the reset logic.",
+     "event_index": 32,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "sonnet",
+  "batch": "subagent",
+  "ms": 7812,
+  "cost_usd": 0.07396599999999999,
+  "input_tokens": 17125,
+  "output_tokens": 547,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Before/after snapshot diffing to attribute side effects",
+     "category": "pattern",
+     "summary": "To learn which files a black-box command produced, snapshot the relevant state (untracked files) before and after running it and take the set difference, then persist the result.",
+     "why_here": "The setup command is an arbitrary shell string, so the agent recorded untracked files before and after it ran to identify its output paths for harness-setup.json.",
+     "event_index": 40,
+     "reuses_known": false
+    },
+    {
+     "name": "Git ignore-pattern escaping and exclude-based clean",
+     "category": "tooling",
+     "summary": "git clean -e and .gitignore patterns are globs where characters like * ? [ space ! # are special, so literal file names must be escaped and anchored with a leading slash to match only that exact path.",
+     "why_here": "The agent made reset's git clean skip recorded setup output by building escaped, anchored --exclude patterns, and probed git clean behavior and tested with a file name containing [, * and a space.",
+     "event_index": 46,
+     "reuses_known": false
+    },
+    {
+     "name": "Backward-compatible schema evolution with defaults",
+     "category": "trade-off",
+     "summary": "Adding a new field with a default value to a persisted record (pydantic model) lets old files still load, while the cost is that old data lacks the new information.",
+     "why_here": "output_paths was added to SetupRecord with a default of an empty tuple so existing v0 harness-setup.json files still parse, and the agent noted the leftover limitation for old worktrees.",
+     "event_index": 36,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "haiku",
+  "batch": "supervisor-loop",
+  "ms": 10085,
+  "cost_usd": 0.00081981,
+  "input_tokens": 5313,
+  "output_tokens": 1533,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Last-known-good rollback with git checkpoints",
+     "category": "pattern",
+     "summary": "Commit each working state, and when a change breaks things, restore the most recent committed good version instead of trying to repair the broken one.",
+     "why_here": "Claude edits harness.py unattended, so supervisor.py commits every successful cycle and restores harness.py from git after a failed cycle, capping consecutive failures at three.",
+     "event_index": 3,
+     "reuses_known": false
+    },
+    {
+     "name": "Canary test before an expensive run",
+     "category": "testing",
+     "summary": "Run a cheap, fast check that exercises the real dependency, such as a minimal model call with a turn limit, to confirm the pipeline works before committing to a long job.",
+     "why_here": "Before the unattended loop spends the leftover quota, the agent compiles the code, runs the offline selftest, and sends one tiny haiku request through claude -p to validate the whole path.",
+     "event_index": 8,
+     "reuses_known": false
+    },
+    {
+     "name": "Least-privilege tool allowlist for autonomous agents",
+     "category": "trade-off",
+     "summary": "Grant an automated agent only the specific tools and permissions it needs, rather than bypassing all permission checks, which limits the damage a bad or injected action can do.",
+     "why_here": "The agent deliberately omitted --dangerously-skip-permissions and passed a fixed list of allowed shell commands, while noting the trade-off that pip install still widens what the agent can do.",
+     "event_index": 10,
+     "reuses_known": false
+    }
+   ]
+  }
+ },
+ {
+  "model": "sonnet",
+  "batch": "supervisor-loop",
+  "ms": 7262,
+  "cost_usd": 0.026524000000000002,
+  "input_tokens": 5292,
+  "output_tokens": 536,
+  "is_error": false,
+  "concepts": {
+   "concepts": [
+    {
+     "name": "Supervisor/watchdog with immutable core and rollback",
+     "category": "architecture",
+     "summary": "A fixed, protected process runs a mutable component, validates it after each run (selftest), commits good states to git and restores the last good version on failure, giving up after N consecutive failures.",
+     "why_here": "Since Claude rewrites harness.py, a bad self-edit could break the loop, so an unchangeable supervisor.py validates, commits and rolls back.",
+     "event_index": 3,
+     "reuses_known": false
+    },
+    {
+     "name": "Exit codes as a process contract",
+     "category": "pattern",
+     "summary": "Distinct process exit codes (0 ok, 3 limit, 4 done) and a quick --selftest flag form a simple interface between a parent and child program without shared state.",
+     "why_here": "The supervisor decides whether to continue, back off, stop or restore based on harness.py's exit code, which the self-editing harness must preserve.",
+     "event_index": 4,
+     "reuses_known": false
+    },
+    {
+     "name": "Retry with backoff and bounded failures",
+     "category": "pattern",
+     "summary": "On a transient error like a rate limit, sleep for a bounded interval and retry, while capping consecutive hard failures and per-cycle timeouts to avoid infinite loops.",
+     "why_here": "Usage-limit hits cause 15-minute waits capped by the deadline, while a 60-minute cycle timeout and MAX_FAILURES=3 stop runaway behavior.",
+     "event_index": 3,
+     "reuses_known": false
+    }
+   ]
+  }
+ }
+]
