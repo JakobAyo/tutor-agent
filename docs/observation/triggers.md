@@ -4,7 +4,7 @@
 
 ## When detection runs
 - **Automatic:** once per finished agent turn (the hook fires) on the new transcript events ([0007](../decisions/0007-interaction-model.md)).
-- **Pre-filter (no LLM call):** skip the turn if it contains no code edits, no commands, and no substantial reasoning.
+- **Pre-filter (no LLM call):** skip the turn if it contains no code edits, no commands, and no substantial reasoning. "Substantial" means at least 600 chars of agent text (`reasoning` events) in the batch; the user's prompt doesn't count. All five M0 batches pass. Skips are logged.
 - **On demand:** from the tutor pane ("explain what just happened").
 
 ## The "worth knowing" filter

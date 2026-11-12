@@ -4,8 +4,10 @@
 
 | Component | Single responsibility | Interface |
 |---|---|---|
-| **Hook entry** | Receive the Claude Code hook and start detection without blocking | Reads the hook JSON from stdin, starts the detector detached, exits 0 |
-| **Transcript reader** | Turn new JSONL lines into [events](../observation/event-model.md) | `read_new(session) -> batch`, keeps the last position per session and per subagent transcript ([0015](../decisions/0015-include-subagent-activity.md)) |
+| **Hook entry** | Receive the Claude Code hook and start detection without blocking | `tutor hook`: reads the hook JSON from stdin, starts `tutor detect <transcript> --session-id <id>` detached, always exits 0 with no output ([0026](../decisions/0026-hook-handoff-and-install.md)) |
+| **Transcript reader** | Turn new JSONL lines into [events](../observation/event-model.md) | `reader.read_new(transcript, session_id, advance=True) -> Batch`, keeps the last position per session and per subagent transcript ([0015](../decisions/0015-include-subagent-activity.md), [0025](../decisions/0025-byte-offsets-per-session.md)). The record mapping is in `events.py` |
+| **Pre-filter** | Skip batches that can't teach anything, without an LLM call | `prefilter.skip_reason(events) -> str \| None` ([triggers](../observation/triggers.md)) |
+| **Installer** | Add or remove the hook in the global Claude Code settings | `tutor install` / `tutor uninstall`: diff, confirm, backup, atomic write ([0026](../decisions/0026-hook-handoff-and-install.md)) |
 | **Claude runner** | The only place that calls `claude -p` | `run(prompt, model, ...) -> text/JSON`, loads the token from the data directory's `.env` if one exists ([0019](../decisions/0019-token-in-data-directory.md)), applies the recursion guard, disables all tools and runs from the data directory ([0011](../decisions/0011-sandboxed-claude-calls.md)). The model comes from settings: cheap for detection, strong for lessons ([0016](../decisions/0016-model-per-job.md)) |
 | **Detector** | Find worth-knowing concepts in a batch | `detect(batch, known_names) -> [concept]`, each with a short source snippet ([0013](../decisions/0013-store-source-snippets.md)) |
 | **Concept store** | Read and write the concept memory safely | add, update status, list, add source |
@@ -33,4 +35,5 @@ Two layers, both verified in M0 ([0022](../decisions/0022-claude-p-flag-set.md))
 ## Hook entry
 - Handles `Stop` (main transcript) and `SubagentStop` (subagent transcript) ([0021](../decisions/0021-subagentstop-trigger.md)).
 - Starts the detector with `subprocess.Popen(..., start_new_session=True)` and stdio set to `DEVNULL`. M0 confirmed the detector keeps running after the session exits, and that it authenticates with the existing Claude Code login.
-- Keep its imports minimal: Python start-up is most of its run time.
+- Keep its imports minimal: Python start-up is most of its run time. `tutor hook` skips `argparse`. Measured in M2 with the installed tool: about 35 ms including the spawn.
+- The detector is started as `sys.executable -m tutor_agent.cli detect ...` from the data directory, with stderr appended to `tutor.log` ([0026](../decisions/0026-hook-handoff-and-install.md)).

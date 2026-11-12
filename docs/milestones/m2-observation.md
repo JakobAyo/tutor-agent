@@ -16,7 +16,21 @@ Every finished agent or subagent turn in any session produces a correct batch of
 The detection prompt, concept storage, notifications.
 
 ## Done when
-- [ ] The hook returns in about 100 ms (measured).
+- [x] The hook returns in about 100 ms (measured).
 - [ ] In real sessions, including ones with subagents, each batch holds exactly the new events.
-- [ ] A crash in `tutor detect` shows up only in the tutor log, never in the agent session.
-- [ ] Reader and pre-filter are tested with the M0 fixture transcripts.
+- [x] A crash in `tutor detect` shows up only in the tutor log, never in the agent session.
+- [x] Reader and pre-filter are tested with the M0 fixture transcripts.
+
+## Results (2026-11-12)
+Decisions: [0025](../decisions/0025-byte-offsets-per-session.md) (offsets, lock, backlog cap), [0026](../decisions/0026-hook-handoff-and-install.md) (hook handoff, install).
+
+| Item | Evidence |
+|---|---|
+| Hook time | Installed tool (`~/.local/bin/tutor hook`), 20 runs each: median 35 ms (max 44 ms) when it starts `tutor detect`, 19.5 ms when the recursion guard exits early |
+| Crash isolation | `tests/test_hook.py`: a missing transcript and a bad payload give exit 0, empty stdout and stderr, and a traceback in `tutor.log` |
+| Exactly the new events | `tests/test_reader.py`: incremental reads, partial last line, broken line, shrunk file, subagent offsets in the same session file. 4 processes reading while a writer appends 50 turns see every turn exactly once; with the lock removed the test fails (3 of 3 runs) |
+| Reader and pre-filter | The M0 fixtures are event batches, not raw transcripts, so the reader is tested on synthetic transcripts with the M0 record shapes (`tests/transcripts.py`). The pre-filter passes all five M0 batches and skips short chat |
+| Install | `tests/test_install.py`: keeps other hooks, idempotent, replaces an old path, uninstall restores the original, backup, file mode kept, refuses invalid JSON. Not yet run on the real `~/.claude/settings.json` |
+| Offline tests | `uv run pytest`: 96 tests |
+
+Still open: run `tutor install`, then check `tutor.log` in real sessions with and without subagents (including a background subagent, where `Stop` fires twice).
