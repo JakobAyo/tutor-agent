@@ -14,4 +14,6 @@
 | Structured output | `--json-schema`, read from `structured_output` | [0023](../decisions/0023-structured-detection-output.md) |
 | Concept memory | One JSON file in `~/.local/share/tutor-agent/` | [0008](../decisions/0008-concept-memory-json.md) |
 | TUI | Textual | [0009](../decisions/0009-textual-tui.md) |
-| Packaging/tooling | uv, installed with `uv tool install` | [0010](../decisions/0010-uv-and-python-312.md) |
+| Packaging/tooling | uv (`uv_build` backend, `src/` layout), installed with `uv tool install .` | [0010](../decisions/0010-uv-and-python-312.md) |
+| Settings | `settings.toml` in the data directory, read with `tomllib` | [0024](../decisions/0024-settings-toml.md) |
+| Tests | pytest. A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1 |

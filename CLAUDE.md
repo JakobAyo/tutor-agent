@@ -15,7 +15,13 @@ A personal tutor agent. It watches my Claude Code sessions and teaches me the co
 - Keep it short. Skip basics: I have a CS background but little practical experience.
 
 ## Status
-Design phase, no code yet. Decided: Claude Code only (all sessions, including subagents), `claude -p` on my subscription (no tools, neutral directory, cheap model for detection), source snippets stored with each concept, Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, cached lessons, stateless follow-ups, token (if needed) in the data directory, no quizzes for now (see `docs/decisions/`). Milestones are planned in `docs/milestones/` (M0 spike to M6 daily use). M0 spike done (results in `docs/milestones/m0-spike.md`, ADRs 0021–0023, throwaway scripts in `spike/`). Next: M1 foundation.
+Design phase, no code yet. Decided: Claude Code only (all sessions, including subagents), `claude -p` on my subscription (no tools, neutral directory, cheap model for detection), source snippets stored with each concept, Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, cached lessons, stateless follow-ups, token (if needed) in the data directory, no quizzes for now (see `docs/decisions/`). Milestones are planned in `docs/milestones/` (M0 spike to M6 daily use). M0 spike done (results in `docs/milestones/m0-spike.md`, ADRs 0021–0023, throwaway scripts in `spike/`). M1 foundation done: package `src/tutor_agent/` (paths, settings, log, store, runner, CLI stubs), settings in `settings.toml` (ADR 0024). Next: M2 observation pipeline.
+
+## Commands
+- `uv sync`: set up the dev environment.
+- `uv run pytest`: offline tests (a fake `claude`, no usage spent).
+- `uv run pytest -m real`: the one real `claude -p` call (Haiku, about $0.001).
+- `uv tool install --force .`: install or refresh the `tutor` command.
 
 ## Docs
 All project decisions and design notes live in `docs/`. Start at `docs/CLAUDE.md` (index).

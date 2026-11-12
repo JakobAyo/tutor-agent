@@ -21,7 +21,9 @@ claude -p --model <model> --output-format json \
   --no-session-persistence --system-prompt <prompt> [--json-schema <schema>]
 ```
 
-Detection passes `--json-schema` and reads the `structured_output` field ([0023](../decisions/0023-structured-detection-output.md)). The prompt goes in on stdin, because `--tools` takes a variable number of values and would swallow a positional prompt.
+Detection passes `--json-schema` and reads the `structured_output` field ([0023](../decisions/0023-structured-detection-output.md)). With `--json-schema`, the model sees exactly one tool, `StructuredOutput`, which only returns the answer (checked in M1 by `tests/test_runner_real.py`). The prompt goes in on stdin, because `--tools` takes a variable number of values and would swallow a positional prompt.
+
+The runner also removes the observed session's variables (`CLAUDECODE`, `CLAUDE_CODE_SESSION_ID`, …) from the environment, so the call behaves like a fresh top-level `claude -p`, the same as the M0 runs through `spike/clean_env.sh`. A timeout kills the whole process group. Any failure (exit code, non-JSON, `is_error`, missing `structured_output`) raises `ClaudeError` and is logged.
 
 ## Recursion guard
 Two layers, both verified in M0 ([0022](../decisions/0022-claude-p-flag-set.md)):

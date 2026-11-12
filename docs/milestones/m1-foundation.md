@@ -17,7 +17,17 @@ An installable `tutor` CLI with a concept store and a Claude runner that are saf
 Hooks, transcripts, prompts, UI.
 
 ## Done when
-- [ ] `uv tool install .` installs `tutor`, and the subcommands run from any directory.
-- [ ] Parallel writes to the store never lose or corrupt data (tested).
-- [ ] A real runner call returns JSON, runs with no tools from the data directory, and does not fire the hook.
-- [ ] All tests pass without calling the real `claude`.
+- [x] `uv tool install .` installs `tutor`, and the subcommands run from any directory.
+- [x] Parallel writes to the store never lose or corrupt data (tested).
+- [x] A real runner call returns JSON, runs with no tools from the data directory, and does not fire the hook.
+- [x] All tests pass without calling the real `claude`.
+
+## Results (2026-11-12)
+| Item | Evidence |
+|---|---|
+| Install | `uv tool install .`, then `tutor hook/detect/tui` run from `/tmp` |
+| Parallel writes | `tests/test_store.py::test_parallel_writers_lose_nothing`: 8 processes × 25 adds plus one shared concept. With the lock removed, the test fails (50 of 201 concepts survive) |
+| Real call | `uv run pytest -m real`: the data directory holds a `CLAUDE.md` and project hooks as a trap. Neither fired, and the only tool was `StructuredOutput` |
+| Offline tests | `uv run pytest`: 36 tests, the real one is deselected by default |
+
+Settings format: [0024](../decisions/0024-settings-toml.md).
