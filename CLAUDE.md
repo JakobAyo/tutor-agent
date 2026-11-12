@@ -15,7 +15,7 @@ A personal tutor agent. It watches my Claude Code sessions and teaches me the co
 - Keep it short. Skip basics: I have a CS background but little practical experience.
 
 ## Status
-Design phase, no code yet. Decided: Claude Code only (all sessions, including subagents), `claude -p` on my subscription (no tools, neutral directory, cheap model for detection), source snippets stored with each concept, Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, cached lessons, stateless follow-ups, token (if needed) in the data directory, no quizzes for now (see `docs/decisions/`). Next: plan milestones, starting with a spike.
+Design phase, no code yet. Decided: Claude Code only (all sessions, including subagents), `claude -p` on my subscription (no tools, neutral directory, cheap model for detection), source snippets stored with each concept, Python 3.12+ with uv, global status-based memory in one JSON file, Textual TUI, cached lessons, stateless follow-ups, token (if needed) in the data directory, no quizzes for now (see `docs/decisions/`). Milestones are planned in `docs/milestones/` (M0 spike to M6 daily use). Next: M0 spike.
 
 ## Docs
 All project decisions and design notes live in `docs/`. Start at `docs/CLAUDE.md` (index).
