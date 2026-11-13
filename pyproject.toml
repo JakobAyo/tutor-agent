@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "A personal tutor that watches Claude Code sessions and teaches the concepts behind them."
 readme = "CLAUDE.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "textual>=8.2.8",
+]
 
 [project.scripts]
 tutor = "tutor_agent.cli:main"

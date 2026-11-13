@@ -31,4 +31,4 @@ Decision: [0027](../decisions/0027-detection-rules.md) (categories, known-name r
 | Storing | Known → source attached, dismissed → nothing, renamed known → dropped, duplicate in a batch → once, invalid item → dropped, failed call → nothing stored and logged |
 | Offline tests | `uv run pytest`: 135 tests |
 
-Open: the day of real use (second item) needs the refreshed tool (`uv tool install --force --reinstall .`).
+Open: the day of real use (second item). Moved to M6: all milestones are built first, then tested and tuned in real use together. First findings are in the [M6 log](m6-daily-use.md#log).

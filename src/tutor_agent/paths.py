@@ -26,5 +26,9 @@ def env_file() -> Path:
     return data_dir() / ".env"
 
 
+def lessons_dir() -> Path:
+    return data_dir() / "lessons"
+
+
 def log_file() -> Path:
     return data_dir() / "tutor.log"

@@ -30,3 +30,8 @@ Detected: "Lifecycle hooks", "Installed artifact vs source checkout", "Increment
 - **Bias:** the session observed was the tutor's own development, so the concepts are about the tutor. Sessions in other projects are a better test.
 
 Still to check: near-duplicates over the day, snippets on code-heavy turns.
+
+### 2026-11-13: first real lesson (M4)
+Lesson for "Installed artifact vs source checkout" (Sonnet, one call). The general concept, trade-offs and links read well. "What the agent did" quoted a line of chat text, because the concept's most recent source was an assistant summary, and the "why" part then guessed at a story around it. Same root cause as the prose-snippet finding above.
+
+Still to check: whether the lesson links exist (the model has no tools to check them).

@@ -32,8 +32,9 @@ def _install(args) -> int:
 
 
 def _tui(args) -> int:
-    print("tutor tui: not implemented yet (M4)")
-    return 0
+    from tutor_agent import tui
+
+    return tui.main()
 
 
 def build_parser():

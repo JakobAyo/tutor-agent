@@ -13,7 +13,7 @@
 | LLM sandboxing | `claude -p --tools "" --setting-sources "" --strict-mcp-config --no-session-persistence --system-prompt …`, run from the data directory | [0011](../decisions/0011-sandboxed-claude-calls.md), [0022](../decisions/0022-claude-p-flag-set.md) |
 | Structured output | `--json-schema`, read from `structured_output` | [0023](../decisions/0023-structured-detection-output.md) |
 | Concept memory | One JSON file in `~/.local/share/tutor-agent/` | [0008](../decisions/0008-concept-memory-json.md) |
-| TUI | Textual | [0009](../decisions/0009-textual-tui.md) |
+| TUI | Textual 8.2 (the only runtime dependency, imported only by `tutor tui`) | [0009](../decisions/0009-textual-tui.md), [0028](../decisions/0028-lessons-and-tutor-pane.md) |
 | Packaging/tooling | uv (`uv_build` backend, `src/` layout), installed with `uv tool install .` | [0010](../decisions/0010-uv-and-python-312.md) |
 | Settings | `settings.toml` in the data directory, read with `tomllib` | [0024](../decisions/0024-settings-toml.md) |
 | Tests | pytest. A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1 |
