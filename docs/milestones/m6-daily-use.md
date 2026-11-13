@@ -16,3 +16,17 @@ The tutor runs in all my sessions for two weeks, and I fix whatever stops it fro
 - [ ] Notifications feel useful, not noisy (most detected concepts are ones I want to learn).
 - [ ] Each [goal](../vision/goals.md) is reviewed: what works and what's missing.
 - [ ] The next round of work (for example quizzes or a project filter) is listed as candidate ADRs.
+
+## Log
+
+### 2026-11-13: first real detection (M3 day of real use, start)
+Session: tutor-agent development, transcript lines 52–75 (no code edits, chat plus shell output). One Haiku call, ~10 s, ~$0.0013.
+
+Detected: "Lifecycle hooks", "Installed artifact vs source checkout", "Incremental processing with offset checkpoints".
+
+- **Good:** all three are real concepts from the turn, no basics. Categories and summaries are general, and the `context` line says why each one appeared.
+- **Snippet is prose, not code:** two concepts share the same snippet (the whole previous assistant answer), and the third is grep and log output with a 649-character cut in the middle. A lesson built on these would quote chat text, not code. Expected on a turn without code edits; recheck on code-heavy turns, and if the snippet is still prose there, revisit snippet choice ([0027](../decisions/0027-detection-rules.md)).
+- **Summary slightly wrong:** "Incremental processing with offset checkpoints" says "line numbers in a transcript", but the reader stores byte offsets. Haiku inferred line numbers from the log text `lines 44-51`.
+- **Bias:** the session observed was the tutor's own development, so the concepts are about the tutor. Sessions in other projects are a better test.
+
+Still to check: near-duplicates over the day, snippets on code-heavy turns.
