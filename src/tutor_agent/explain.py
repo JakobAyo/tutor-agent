@@ -206,6 +206,7 @@ def explain(turn: LatestTurn, known: list[Concept], settings: Settings) -> str:
         system_prompt=SYSTEM_PROMPT,
         timeout_s=settings.claude_timeout_s,
         claude_bin=settings.claude_bin,
+        job="explain",
     )
     text = result.text.strip()
     if not text:

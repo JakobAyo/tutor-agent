@@ -38,6 +38,7 @@ def test_new_concept_is_stored_with_snippet_and_notified(tmp_path, fake_claude, 
     assert src.snippet == "--- old\nx\n+++ new\ny"
     assert src.context == "The agent cached lookups."
     assert (src.project, src.session_id, src.file) == ("/home/u/proj", t.SESSION, "/home/u/proj/a.py")
+    assert src.kind == "edit"
     assert src.transcript_ref.endswith(f"{t.SESSION}.jsonl:4")
     assert titles(fake_notify) == ["• LRU caching (Design patterns)"]
 

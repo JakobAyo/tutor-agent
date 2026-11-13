@@ -56,6 +56,37 @@ def _explain(args) -> int:
     return 0
 
 
+def _stats(args) -> int:
+    from collections import Counter
+
+    from tutor_agent import paths, usage
+    from tutor_agent.store import ConceptStore, StoreError
+
+    try:
+        concepts = ConceptStore().list()
+    except StoreError as e:
+        print(f"tutor: {e}", file=sys.stderr)
+        return 1
+    path = paths.concepts_file()
+    size = path.stat().st_size if path.exists() else 0
+    by_status = Counter(str(c.status) for c in concepts)
+    sources = sum(len(c.sources) for c in concepts)
+    lessons = len(list(paths.lessons_dir().glob("*.json"))) if paths.lessons_dir().exists() else 0
+    print(f"Concept memory: {len(concepts)} concepts, {sources} sources, {size / 1024:.1f} KB")
+    print("  " + ", ".join(f"{s}: {by_status.get(s, 0)}" for s in ("new", "seen", "understood", "dismissed")))
+    print(f"Cached lessons: {lessons}")
+
+    days = list(usage.per_day().items())[-args.days:]
+    print(f"\nUsage per day (last {args.days} days with calls):")
+    if not days:
+        print("  no calls recorded yet")
+    for date, d in days:
+        jobs = ", ".join(f"{job} {n}" for job, n in sorted(d.calls.items()))
+        failed = f", {d.failed} failed" if d.failed else ""
+        print(f"  {date}  {sum(d.calls.values()):>3} calls ({jobs}{failed})  ${d.cost_usd:.3f}  {d.ms / 1000:.0f}s")
+    return 0
+
+
 def _tui(args) -> int:
     from tutor_agent import tui
 
@@ -86,6 +117,10 @@ def build_parser():
                          help="session number from --list (default 1: the most recently active)")
     explain.add_argument("--list", action="store_true", help="list the recent sessions, no model call")
     explain.set_defaults(func=_explain)
+
+    stats = sub.add_parser("stats", help="concept memory size and model usage per day (no model call)")
+    stats.add_argument("--days", type=int, default=14, help="how many days with calls to show (default 14)")
+    stats.set_defaults(func=_stats)
 
     sub.add_parser("tui", help="open the tutor pane").set_defaults(func=_tui)
     return parser

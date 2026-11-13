@@ -58,6 +58,7 @@ class Source:
     transcript_ref: str | None = None
     file: str | None = None
     seen_at: str = field(default_factory=now)
+    kind: str | None = None  # the event kind the snippet came from (ADR 0030); None before it
 
 
 @dataclass

@@ -5,7 +5,7 @@
 Current method: **explain from real code, then point to further reading** ([0006](../decisions/0006-drop-socratic-quizzes-for-now.md)).
 
 ## Lesson structure
-1. **What the agent did:** the actual snippet or command, quoted from the snippet stored with the source reference (the most recent source by default, [0013](../decisions/0013-store-source-snippets.md)).
+1. **What the agent did:** the actual snippet or command, quoted from the snippet stored with the source reference (the most recent source that shows code: an edit beats a command or its output, which beats prose, [0013](../decisions/0013-store-source-snippets.md), [0030](../decisions/0030-snippets-show-code.md)).
 2. **Why it did it:** the problem this concept solves here.
 3. **The general concept:** what it is beyond this case, in plain terms.
 4. **Trade-offs:** when *not* to use it, and the common alternatives.

@@ -13,6 +13,7 @@ import batches
 import pytest
 
 from tutor_agent import detector
+from tutor_agent.events import Kind
 from tutor_agent.settings import Settings
 
 pytestmark = [pytest.mark.prompt, pytest.mark.skipif(shutil.which("claude") is None, reason="claude not installed")]
@@ -44,6 +45,21 @@ def test_finds_expected_concepts_and_no_basics(name):
     assert any(re.search(EXPECTED[name], n, re.I) for n in names), names
     assert not any(BASICS.fullmatch(n.strip()) for n in names), names
     assert all(not c.reuses_known for c in found)
+
+
+def test_points_at_code_not_at_prose():
+    """M6 regression: on this real batch, the snippets were a `cat` output and a test diff, while
+    the concepts were written in edits to the main code (ADR 0030)."""
+    events = batches.load("tutor-store-and-pane")
+    found = detector.detect(events, [], Settings())
+    print([(c.name, events.index(c.event), c.event.kind, c.event.file) for c in found])
+    assert found
+    picked = [c.event for c in found]
+    assert all(e.kind in (Kind.EDIT, Kind.COMMAND, Kind.TOOL_RESULT) for e in picked)
+    assert any(e.kind is Kind.EDIT for e in picked)
+    assert not any("/docs/" in (e.file or "") for e in picked)
+    # A test file is the right source only for a testing concept.
+    assert not any("/tests/" in (c.event.file or "") and c.category != "Testing" for c in found)
 
 
 def test_reuses_a_known_name_instead_of_a_near_duplicate():

@@ -30,6 +30,10 @@ def lessons_dir() -> Path:
     return data_dir() / "lessons"
 
 
+def usage_file() -> Path:
+    return data_dir() / "usage.jsonl"
+
+
 def log_file() -> Path:
     return data_dir() / "tutor.log"
 

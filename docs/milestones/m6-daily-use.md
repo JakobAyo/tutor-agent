@@ -38,3 +38,12 @@ Still to check: whether the lesson links exist (the model has no tools to check 
 
 ### 2026-11-13: first real "what just happened" (M5)
 `tutor explain` on a short `metris-builder-delta` turn (one `xdg-open` command). Correct and honest: it said the `started` output doesn't prove the browser opened, and that the page description came from earlier work it couldn't see. But it explained `&` and `>/dev/null 2>&1`, which are basics. Watch whether "skip basics" needs a stronger line in the explanation prompt, or whether short turns are just thin material.
+
+### 2026-11-13: snippets on code-heavy turns (round 1 of tuning)
+Checked the 13 concepts stored on day one. Code-heavy turns did not fix the snippets: three concepts shared one `git commit` message, three shared a final summary, "Atomic file replacement" pointed at `cat` output, and "Lazy import" at a test diff instead of the `cli.py` edit. Lessons made it worse by always taking the newest source, which is usually a commit or a summary.
+
+Fix ([0030](../decisions/0030-snippets-show-code.md)): the detection prompt now says to point at the event where the concept is implemented, sources store their event kind, and lessons teach from the newest source that shows the most code. The real batch (lines 153–451) is now a `prompt` test fixture. Re-run: Haiku picked the `tui.py` and `lessons.py` edits and `cat` output of `store.py`, no prose.
+
+Usage tracking added ([0031](../decisions/0031-usage-ledger.md)): `tutor stats` shows memory size and calls/cost per day. Day one from the log, before the ledger: 10 Haiku detection calls, about $0.017; 1 Sonnet lesson, $0.015. Memory: 13 concepts, 24 sources, 46 KB.
+
+Still to check: the snippet choice over more turns and other projects; whether cached lessons built on prose should be regenerated (`r`).

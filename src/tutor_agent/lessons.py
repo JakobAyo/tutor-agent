@@ -59,11 +59,28 @@ class Lesson:
         return cls(**{**raw, "source": Source(**raw["source"])})
 
 
+def source_rank(source: Source) -> int:
+    """How well a source shows code: an edit beats a command or its output, which beat prose.
+
+    Sources stored before ADR 0030 have no kind; a file path means the snippet was an edit.
+    """
+    if source.kind == "edit" or source.file:
+        return 2
+    if source.kind in ("command", "tool_result"):
+        return 1
+    return 0
+
+
 def lesson_source(concept: Concept) -> Source:
-    """The most recent source (teaching strategy, ADR 0013)."""
+    """The most recent source among those that show the most code (ADR 0013, 0030).
+
+    The newest source is often a commit message or a final summary that only mentions the
+    concept; a lesson built on it quotes chat text instead of code.
+    """
     if not concept.sources:
         raise LessonError(f"concept {concept.id} has no source to teach from")
-    return concept.sources[-1]
+    best = max(map(source_rank, concept.sources))
+    return [s for s in concept.sources if source_rank(s) == best][-1]
 
 
 def fence(text: str) -> str:
@@ -103,6 +120,7 @@ def generate(concept: Concept, settings: Settings) -> Lesson:
         system_prompt=SYSTEM_PROMPT,
         timeout_s=settings.claude_timeout_s,
         claude_bin=settings.claude_bin,
+        job="lesson",
     )
     text = result.text.strip()
     if not text:

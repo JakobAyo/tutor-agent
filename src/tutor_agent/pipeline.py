@@ -59,7 +59,7 @@ def detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
         ev = cand.event
         entries.append(Entry(cand.name, cand.category, cand.summary, Source(
             snippet=detector.snippet(ev), context=cand.why_here, project=ev.project or None,
-            session_id=batch.session_id, transcript_ref=ev.transcript_ref, file=ev.file,
+            session_id=batch.session_id, transcript_ref=ev.transcript_ref, file=ev.file, kind=str(ev.kind),
         )))
 
     results = store.record(entries)

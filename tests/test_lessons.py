@@ -28,6 +28,24 @@ def test_prompt_uses_most_recent_source_and_a_safe_fence():
     assert "old = 1" not in prompt
 
 
+def test_lesson_prefers_code_over_a_newer_prose_source():
+    """ADR 0030: a commit message or summary seen later must not replace the code snippet."""
+    code = Source(snippet="def f(): ...", context="c", kind="edit", file="/p/a.py")
+    cmd = Source(snippet="git commit -m 'add f'", context="c", kind="command")
+    prose = Source(snippet="I added f.", context="c", kind="reasoning")
+    assert lessons.lesson_source(concept(sources=[code, cmd, prose])) is code
+    assert lessons.lesson_source(concept(sources=[prose, cmd])) is cmd
+    newer_code = Source(snippet="def g(): ...", context="c", kind="edit")
+    assert lessons.lesson_source(concept(sources=[code, prose, newer_code])) is newer_code
+
+
+def test_old_sources_without_kind_rank_by_file():
+    old_edit = Source(snippet="x = 1", context="c", file="/p/a.py")
+    old_prose = Source(snippet="Done.", context="c")
+    assert lessons.lesson_source(concept(sources=[old_edit, old_prose])) is old_edit
+    assert lessons.lesson_source(concept(sources=[old_prose])) is old_prose
+
+
 def test_concept_without_source_cannot_be_taught():
     with pytest.raises(lessons.LessonError):
         lessons.lesson_source(concept(sources=[]))

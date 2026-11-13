@@ -83,6 +83,33 @@ def test_missing_structured_output_raises(fake_claude):
         call(fake_claude, json_schema=SCHEMA)
 
 
+def ledger() -> list[dict]:
+    import json
+    return [json.loads(line) for line in paths.usage_file().read_text().splitlines()]
+
+
+def test_call_is_written_to_the_usage_ledger(fake_claude):
+    call(fake_claude, model="sonnet", job="lesson")
+    [rec] = ledger()
+    assert (rec["job"], rec["model"], rec["cost_usd"], rec["ok"]) == ("lesson", "sonnet", 0.001, True)
+    assert rec["ms"] >= 0 and rec["at"]
+    assert paths.usage_file().stat().st_mode & 0o077 == 0
+
+
+@pytest.mark.parametrize("mode", ["fail", "bad_json", "is_error"])
+def test_failed_call_is_in_the_ledger_too(fake_claude, mode):
+    fake_claude.mode(mode)
+    with pytest.raises(ClaudeError):
+        call(fake_claude)
+    assert [r["ok"] for r in ledger()] == [False]
+
+
+def test_unwritable_ledger_does_not_fail_the_call(fake_claude):
+    paths.usage_file().mkdir()  # a directory where the file should be
+    assert call(fake_claude).text == "echo: hello"
+    assert "cannot write usage ledger" in paths.log_file().read_text()
+
+
 def test_missing_binary_raises(tmp_path):
     with pytest.raises(ClaudeError, match="cannot start"):
         runner.run("x", model="haiku", system_prompt="s", claude_bin=str(tmp_path / "nope"))

@@ -70,7 +70,12 @@ Otherwise set reuses_known to false.
 Report at most {MAX_CONCEPTS} concepts, the most valuable first. Report none if nothing qualifies.
 summary: one sentence on what the concept is.
 why_here: one sentence on why the agent used it here.
-event_index: the [index] of the event that shows it best, preferably code or a command."""
+event_index: the [index] of the event where the concept is IMPLEMENTED or USED, because the
+learner's lesson quotes that event. In order of preference: an edit that writes the code, a
+command that uses it, output that shows the code, and only if none of these shows it, the
+reasoning where the agent explained the decision. An edit to the main code beats an edit to its
+tests. Never pick a commit message or a summary of finished work if an earlier event shows the
+code: those only mention the concept. Each concept should point at its own event."""
 
 
 @dataclass(frozen=True)
@@ -151,5 +156,6 @@ def detect(events: list[Event], known_names: list[str], settings: Settings) -> l
         json_schema=SCHEMA,
         timeout_s=settings.claude_timeout_s,
         claude_bin=settings.claude_bin,
+        job="detect",
     )
     return parse(result.structured, events)

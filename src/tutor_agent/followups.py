@@ -114,6 +114,7 @@ def answer(concept: Concept, lesson: Lesson, thread: list[Turn], known: list[Con
         system_prompt=SYSTEM_PROMPT,
         timeout_s=settings.claude_timeout_s,
         claude_bin=settings.claude_bin,
+        job="followup",
     )
     text = result.text.strip()
     if not text:

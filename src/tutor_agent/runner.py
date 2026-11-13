@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from tutor_agent import paths
+from tutor_agent import paths, usage
 from tutor_agent.log import get_logger, register_secret
 
 INTERNAL_ENV = "TUTOR_AGENT_INTERNAL"
@@ -97,9 +97,12 @@ def run(
     json_schema: dict | None = None,
     timeout_s: float = 120.0,
     claude_bin: str = "claude",
+    job: str = "other",
 ) -> RunResult:
     """Run one sandboxed call. The prompt goes in on stdin, because `--tools ""` would swallow
-    a positional prompt. Raises `ClaudeError` on any failure; never returns a half result."""
+    a positional prompt. Raises `ClaudeError` on any failure; never returns a half result.
+
+    Every call that got an answer, good or bad, is written to the usage ledger under `job`."""
     log = get_logger()
     cwd = paths.data_dir()
     cmd = build_command(claude_bin, model, system_prompt, json_schema)
@@ -119,18 +122,25 @@ def run(
     except subprocess.TimeoutExpired:
         os.killpg(proc.pid, signal.SIGKILL)
         proc.communicate()
+        usage.record(job, model, round((time.monotonic() - start) * 1000), None, ok=False)
         log.error("claude timed out after %ss (model=%s)", timeout_s, model)
         raise ClaudeError(f"claude timed out after {timeout_s}s") from None
     duration_ms = round((time.monotonic() - start) * 1000)
+    try:
+        data = json.loads(stdout)
+    except json.JSONDecodeError:
+        data = None
+    if not isinstance(data, dict):
+        data = None
+    ok = proc.returncode == 0 and data is not None and not data.get("is_error")
+    usage.record(job, model, duration_ms, data.get("total_cost_usd") if data else None, ok=ok)
 
     if proc.returncode != 0:
         log.error("claude exited %s (model=%s): %s", proc.returncode, model, (stderr or stdout)[-500:])
         raise ClaudeError(f"claude exited with code {proc.returncode}")
-    try:
-        data = json.loads(stdout)
-    except json.JSONDecodeError:
+    if data is None:
         log.error("claude returned non-JSON output (model=%s): %s", model, stdout[-500:])
-        raise ClaudeError("claude returned non-JSON output") from None
+        raise ClaudeError("claude returned non-JSON output")
     if data.get("is_error"):
         log.error("claude reported an error (model=%s): %s", model, str(data.get("result"))[-500:])
         raise ClaudeError(f"claude reported an error: {data.get('subtype', 'unknown')}")
