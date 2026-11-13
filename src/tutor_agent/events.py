@@ -106,17 +106,19 @@ def _head_lines(text: str, limit: int) -> str:
     return kept + f"\n[... {len(text) - len(kept)} chars cut ...]"
 
 
-def _is_prompt(rec: dict) -> bool:
+def is_prompt(rec: dict) -> bool:
     """A real user prompt: not a tool result, not meta, not a wrapper Claude Code injected."""
+    if rec.get("type") != "user" or not isinstance(rec.get("message"), dict):
+        return False
     if rec.get("isMeta") or "toolUseResult" in rec:
         return False
-    content = rec.get("message", {}).get("content")
+    content = rec["message"].get("content")
     if isinstance(content, str):
         return bool(content.strip()) and not content.lstrip().startswith(_WRAPPERS)
     return any(isinstance(b, dict) and b.get("type") == "text" for b in content or [])
 
 
-def _text_of(content) -> str:
+def text_of(content) -> str:
     if isinstance(content, str):
         return content
     return "\n".join(b.get("text", "") for b in content or [] if isinstance(b, dict) and b.get("type") == "text")
@@ -148,8 +150,8 @@ class EventMapper:
                 transcript_ref=ref,
             )
 
-        if rtype == "user" and _is_prompt(rec):
-            return [ev(Kind.PROMPT, truncate(_text_of(msg.get("content"))))]
+        if rtype == "user" and is_prompt(rec):
+            return [ev(Kind.PROMPT, truncate(text_of(msg.get("content"))))]
 
         blocks = msg.get("content")
         if not isinstance(blocks, list):
@@ -171,7 +173,7 @@ class EventMapper:
                 self._bash_ids.add(b.get("id", ""))
                 out.append(ev(Kind.COMMAND, truncate((b.get("input") or {}).get("command", ""))))
             elif t == "tool_result" and b.get("tool_use_id") in self._bash_ids:
-                out.append(ev(Kind.TOOL_RESULT, truncate(_text_of(b.get("content")), MAX_TOOL_RESULT)))
+                out.append(ev(Kind.TOOL_RESULT, truncate(text_of(b.get("content")), MAX_TOOL_RESULT)))
         return out
 
 

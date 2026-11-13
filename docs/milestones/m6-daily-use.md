@@ -35,3 +35,6 @@ Still to check: near-duplicates over the day, snippets on code-heavy turns.
 Lesson for "Installed artifact vs source checkout" (Sonnet, one call). The general concept, trade-offs and links read well. "What the agent did" quoted a line of chat text, because the concept's most recent source was an assistant summary, and the "why" part then guessed at a story around it. Same root cause as the prose-snippet finding above.
 
 Still to check: whether the lesson links exist (the model has no tools to check them).
+
+### 2026-11-13: first real "what just happened" (M5)
+`tutor explain` on a short `metris-builder-delta` turn (one `xdg-open` command). Correct and honest: it said the `started` output doesn't prove the browser opened, and that the page description came from earlier work it couldn't see. But it explained `&` and `>/dev/null 2>&1`, which are basics. Watch whether "skip basics" needs a stronger line in the explanation prompt, or whether short turns are just thin material.

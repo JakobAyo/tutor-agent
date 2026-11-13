@@ -25,8 +25,9 @@ flowchart LR
 4. Concepts that are new and worth knowing are added as `new`, and one desktop notification is sent.
 
 ## Learning flow (on demand)
-1. I open the tutor pane and pick a concept, or ask about the current session.
-2. The pane loads the source events and calls `claude -p` to produce the lesson.
-3. The status changes to `seen`. I mark `understood` myself.
+1. I open the tutor pane and pick a concept, or ask about a recent session.
+2. For a concept, the pane builds the lesson from the stored snippet with one `claude -p` call (cached), and the status changes to `seen`. I mark `understood` myself.
+3. I can ask follow-ups under the lesson. Each is a fresh call with the lesson, the thread and what I know ([0029](../decisions/0029-follow-ups-and-latest-turn.md)).
+4. For a session, the pane reads its latest turn (with subagent work) from the transcript and explains it with one call.
 
 Details: [components](components.md), [data storage](data-storage.md), [tech stack](tech-stack.md).

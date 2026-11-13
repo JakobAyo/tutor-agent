@@ -14,7 +14,10 @@ Current method: **explain from real code, then point to further reading** ([0006
 ## Style
 - Short and concrete. Start from the code, not the theory.
 - Assume a CS background: skip basics, but explain practical "why" and "how in real projects".
-- Follow-up questions are answered in the context of the same lesson. Each answer is built from the lesson context, the thread so far, and related concepts I've already `seen` or `understood`, so it builds on what I know ([0012](../decisions/0012-stateless-follow-ups.md)).
+- Follow-up questions are answered in the context of the same lesson. Each answer is built from the lesson context, the thread so far, and related concepts I've already `seen` or `understood`, so it builds on what I know ([0012](../decisions/0012-stateless-follow-ups.md)). Long threads lose their oldest turns ([0029](../decisions/0029-follow-ups-and-latest-turn.md)).
+
+## What just happened
+On demand, the latest turn of a chosen session is explained in four parts: what happened (steps, quoting code and commands), why it did it this way (decisions, alternatives, costs), concepts behind it (known ones only named), and worth checking (what a senior engineer would question). Not cached ([0029](../decisions/0029-follow-ups-and-latest-turn.md)).
 
 ## Not used for now
 Socratic questioning, predict-the-next-step, and spaced repetition. They can be added later through a new ADR.

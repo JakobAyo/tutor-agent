@@ -85,6 +85,8 @@ def fake_bins(request, tmp_path_factory, monkeypatch):
         return
     bin_dir = tmp_path_factory.mktemp("bin")  # not in tmp_path: some tests check what is there
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+    # Never read my real sessions. Not for real calls: `claude` keeps its login there.
+    monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path_factory.mktemp("claude-home")))
     yield FakeClaude(bin_dir, monkeypatch), FakeNotifySend(bin_dir, monkeypatch)
 
 

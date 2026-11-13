@@ -12,6 +12,8 @@ All of it is stored locally, outside any project repo, in the tutor data directo
 | **Settings** | Model per job, mute switch, `claude` path, call timeout | `settings.toml`, optional, read-only for the tutor ([0024](../decisions/0024-settings-toml.md)) |
 | **Log** | Detector and runner errors | `tutor.log`, rotated at 1 MB. A filter masks the token in every record, including tracebacks |
 
+Not stored: follow-up threads (kept in the pane while it runs) and "what just happened" explanations ([0029](../decisions/0029-follow-ups-and-latest-turn.md)). Transcripts are only read.
+
 Files: `concepts.json` (concept memory, format `{"version": 1, "concepts": [...]}`), `concepts.json.lock` (writer lock), `offsets/` (transcript offsets and their locks), `lessons/` (lesson cache), `settings.toml`, `tutor.log`, `.env`.
 
 Secrets: if a `claude setup-token` token is needed, it lives in `.env` in the data directory with permissions `600`. It is never kept in the tutor repo ([0019](../decisions/0019-token-in-data-directory.md)).

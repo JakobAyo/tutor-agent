@@ -31,6 +31,31 @@ def _install(args) -> int:
     return 0
 
 
+def _explain(args) -> int:
+    from tutor_agent import explain, followups, runner, settings
+    from tutor_agent.store import ConceptStore, StoreError
+
+    sessions = explain.recent_sessions()
+    if args.list or not sessions:
+        for i, s in enumerate(sessions, 1):
+            print(f"{i:>2}. {s.label()}")
+        if not sessions:
+            print("tutor: no Claude Code sessions found", file=sys.stderr)
+        return 0 if sessions else 1
+    if not 1 <= args.pick <= len(sessions):
+        print(f"tutor: pick a number from 1 to {len(sessions)} (see --list)", file=sys.stderr)
+        return 1
+    session = sessions[args.pick - 1]
+    try:
+        known = followups.known_concepts(ConceptStore().list())
+        text = explain.explain(explain.latest_turn(session), known, settings.load())
+    except (OSError, StoreError, settings.SettingsError, runner.ClaudeError, explain.ExplainError) as e:
+        print(f"tutor: {e}", file=sys.stderr)
+        return 1
+    print(f"{session.label()}\n\n{text}")
+    return 0
+
+
 def _tui(args) -> int:
     from tutor_agent import tui
 
@@ -55,6 +80,12 @@ def build_parser():
         p = sub.add_parser(name, help=text)
         p.add_argument("-y", "--yes", action="store_true", help="don't ask before writing")
         p.set_defaults(func=_install)
+
+    explain = sub.add_parser("explain", help="explain what just happened in a recent session (one model call)")
+    explain.add_argument("pick", nargs="?", type=int, default=1,
+                         help="session number from --list (default 1: the most recently active)")
+    explain.add_argument("--list", action="store_true", help="list the recent sessions, no model call")
+    explain.set_defaults(func=_explain)
 
     sub.add_parser("tui", help="open the tutor pane").set_defaults(func=_tui)
     return parser

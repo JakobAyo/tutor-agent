@@ -75,3 +75,32 @@ def test_install_uses_claude_config_dir(monkeypatch, tmp_path, capsys):
 def test_unknown_command_fails():
     with pytest.raises(SystemExit):
         cli.main(["nope"])
+
+
+def _session(name="s1"):
+    from tutor_agent import paths
+    return t.write(paths.claude_projects_dir() / "-home-u-proj" / f"{name}.jsonl", t.turn(0))
+
+
+def test_explain_list_makes_no_call(fake_claude, capsys):
+    _session()
+    assert cli.main(["explain", "--list"]) == 0
+    assert "1. proj · just now\n  add caching #0" in capsys.readouterr().out
+    assert fake_claude.calls == 0
+
+
+def test_explain_prints_the_explanation_of_the_most_recent_session(fake_claude, capsys):
+    _session()
+    assert cli.main(["explain"]) == 0
+    out = capsys.readouterr().out
+    assert out.startswith("proj · just now") and "echo: PROJECT: /home/u/proj" in out
+    assert fake_claude.calls == 1
+
+
+def test_explain_rejects_a_bad_pick_and_no_sessions(fake_claude, capsys):
+    assert cli.main(["explain"]) == 1
+    assert "no Claude Code sessions" in capsys.readouterr().err
+    _session()
+    assert cli.main(["explain", "5"]) == 1
+    assert "from 1 to 1" in capsys.readouterr().err
+    assert fake_claude.calls == 0
