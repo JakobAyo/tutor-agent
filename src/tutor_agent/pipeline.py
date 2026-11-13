@@ -4,9 +4,10 @@ notify.
 Runs detached from the hook, so every failure is logged here and nowhere else.
 """
 
+import fcntl
 from pathlib import Path
 
-from tutor_agent import detector, events, notifier, prefilter, reader, settings
+from tutor_agent import detector, events, notifier, paths, prefilter, reader, settings
 from tutor_agent.log import get_logger
 from tutor_agent.store import Concept, ConceptStore, Entry, Outcome, Source, concept_id
 
@@ -40,7 +41,17 @@ def detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
 
     The offset has already moved, so a failed call loses this batch. That is on purpose: retrying
     would mean a second call for the same turn, and the next turn usually shows the same ideas.
+
+    Detections run one at a time (ADR 0032). Two overlapping calls would both read the KNOWN list
+    before either stored its concepts, so the second one names the same ideas again, differently.
+    Waiting is fine: this process is detached from the agent session.
     """
+    with open(paths.detect_lock_file(), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)  # released when the file closes
+        return _detect_and_store(batch, where)
+
+
+def _detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
     log = get_logger()
     cfg = settings.load()
     store = ConceptStore()

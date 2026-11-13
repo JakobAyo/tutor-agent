@@ -34,6 +34,11 @@ def usage_file() -> Path:
     return data_dir() / "usage.jsonl"
 
 
+def detect_lock_file() -> Path:
+    """Held for a whole detection, so detections run one at a time (ADR 0032)."""
+    return data_dir() / "detect.lock"
+
+
 def log_file() -> Path:
     return data_dir() / "tutor.log"
 

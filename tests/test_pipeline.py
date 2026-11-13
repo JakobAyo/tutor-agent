@@ -1,5 +1,9 @@
 """`tutor detect` end to end on a synthetic transcript, with the fake `claude` and `notify-send`."""
 
+import fcntl
+import threading
+import time
+
 import transcripts as t
 
 from tutor_agent import cli, paths
@@ -116,3 +120,19 @@ def test_invalid_output_stores_nothing(tmp_path, fake_claude, fake_notify):
     fake_claude.answer({"concepts": [found(event_index=99)]})
     assert run_detect(tmp_path) == 0
     assert ConceptStore().list() == [] and fake_notify.calls == []
+
+
+def test_detection_waits_for_a_running_one_and_sees_its_concepts(tmp_path, fake_claude, fake_notify):
+    # Two overlapping detections both read KNOWN before either stored, and the second named the
+    # first one's concepts again under new names (M6 log, ADR 0032).
+    fake_claude.answer({"concepts": [found()]})
+    with open(paths.detect_lock_file(), "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)  # a detection is running
+        worker = threading.Thread(target=run_detect, args=(tmp_path,))
+        worker.start()
+        time.sleep(0.3)
+        assert worker.is_alive() and fake_claude.calls == 0  # waiting, no call yet
+        known("Append-only log")  # what the running detection stores
+    worker.join(timeout=10)
+    assert not worker.is_alive()
+    assert "Append-only log" in fake_claude.record["stdin"].splitlines()[0]

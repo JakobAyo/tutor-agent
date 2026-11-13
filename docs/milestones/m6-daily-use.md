@@ -47,3 +47,15 @@ Fix ([0030](../decisions/0030-snippets-show-code.md)): the detection prompt now 
 Usage tracking added ([0031](../decisions/0031-usage-ledger.md)): `tutor stats` shows memory size and calls/cost per day. Day one from the log, before the ledger: 10 Haiku detection calls, about $0.017; 1 Sonnet lesson, $0.015. Memory: 13 concepts, 24 sources, 46 KB.
 
 Still to check: the snippet choice over more turns and other projects; whether cached lessons built on prose should be regenerated (`r`).
+
+### 2026-11-13: near-duplicates came from overlapping detections (round 2)
+Day one ended with 19 concepts. Two pairs are near-duplicates: "Lock-free append-only log with O_APPEND" and "Append-only usage ledger for LLM calls", "Testing non-deterministic LLM output with opt-in marker and loose property checks" and "Golden-set regression tests for LLM prompts". Not a prompt problem: the log shows the two detections on session `60c8b5fd` (lines 1–409 and 410–422) overlapped by about one second, so the second call's KNOWN list didn't hold the first call's concepts yet. Every other re-detection that day (for example "Background worker…", "Bounded tail read…") was correctly attached, because those calls started after the previous store.
+
+Fix ([0032](../decisions/0032-one-detection-at-a-time.md)): detections run one at a time under a global `detect.lock`. Regression test in `tests/test_pipeline.py`.
+
+Other observations from day one:
+- "Installed artifact vs source checkout" was attached on 5 turns (every `uv tool install`). No notification, so harmless, but it takes one of the 3 slots. Watch whether known concepts crowd out new ones.
+- Some names are long and narrow ("Testing non-deterministic LLM output with opt-in marker and loose property checks", "Evidence ranking by source kind for grounded LLM output"). Watch whether this repeats outside the tutor's own repo before tuning the "name at a general level" rule.
+- All 19 concepts come from tutor-agent sessions, so the self-observation bias from the first entry still holds.
+
+Still to check: duplicates after the lock is in place; the existing two pairs can be dismissed by hand.
