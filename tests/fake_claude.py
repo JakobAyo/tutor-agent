@@ -1,7 +1,8 @@
 """Stand-in for the `claude` binary in runner tests. Never calls a model.
 
 It writes what it received (argv, cwd, stdin, selected env vars) to `$FAKE_CLAUDE_RECORD` and
-behaves according to `$FAKE_CLAUDE_MODE`.
+behaves according to `$FAKE_CLAUDE_MODE`. `$FAKE_CLAUDE_STRUCTURED` (JSON) is returned as
+`structured_output`. Every call appends a line to `$FAKE_CLAUDE_RECORD.calls`.
 """
 
 import json
@@ -20,6 +21,8 @@ def main() -> int:
     with open(os.environ["FAKE_CLAUDE_RECORD"], "w") as f:
         json.dump({"argv": args, "cwd": os.getcwd(), "stdin": prompt,
                    "env": {k: os.environ.get(k) for k in WATCHED_ENV}}, f)
+    with open(os.environ["FAKE_CLAUDE_RECORD"] + ".calls", "a") as f:
+        f.write(mode + "\n")
 
     if mode == "fail":
         print("boom", file=sys.stderr)
@@ -41,7 +44,8 @@ def main() -> int:
     out = {"type": "result", "subtype": "success", "is_error": mode == "is_error",
            "result": f"echo: {prompt}", "total_cost_usd": 0.001}
     if "--json-schema" in args and mode != "no_structured":
-        out["structured_output"] = {"echo": prompt}
+        canned = os.environ.get("FAKE_CLAUDE_STRUCTURED")
+        out["structured_output"] = json.loads(canned) if canned else {"echo": prompt}
     print(json.dumps(out))
     return 0
 

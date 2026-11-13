@@ -17,4 +17,6 @@ A concept triggers a notification only if **both** are true:
 
 ## Concept identity
 - Concepts are named at a general level ("dependency injection", not "the `get_db` function").
-- The detector receives the list of known concept names, so it reuses an existing name instead of creating a near-duplicate.
+- The detector receives the list of known concept names (every status, dismissed included), so it reuses an existing name instead of creating a near-duplicate.
+- A candidate marked as known whose name matches no known concept is dropped, not stored ([0027](../decisions/0027-detection-rules.md)).
+- At most 3 concepts per batch, each in one of the [curriculum](../pedagogy/curriculum.md) categories.

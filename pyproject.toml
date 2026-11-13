@@ -18,5 +18,8 @@ dev = ["pytest>=8"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["real: calls the real `claude` binary and spends subscription usage (run with `-m real`)"]
-addopts = "-m 'not real'"
+markers = [
+    "real: calls the real `claude` binary and spends subscription usage (run with `-m real`)",
+    "prompt: detection-quality checks on the M0 fixtures with the real model (run with `-m prompt`)",
+]
+addopts = "-m 'not real and not prompt'"

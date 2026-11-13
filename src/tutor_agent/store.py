@@ -5,6 +5,8 @@ the old or the new version, never a half-written one. Writers take an exclusive 
 separate lock file, so two processes can't both read version N and overwrite each other's change.
 """
 
+from __future__ import annotations  # the `list` method shadows the builtin in annotations
+
 import fcntl
 import json
 import os
@@ -74,6 +76,22 @@ class Concept:
         return cls(**{**raw, "status": Status(raw["status"]), "sources": [Source(**s) for s in raw["sources"]]})
 
 
+@dataclass(frozen=True)
+class Entry:
+    """A concept to record, as the detector found it."""
+
+    name: str
+    category: str
+    summary: str
+    source: Source
+
+
+class Outcome(StrEnum):
+    CREATED = "created"  # a new concept, worth a notification
+    ATTACHED = "attached"  # known concept, the source was added
+    DISMISSED = "dismissed"  # known but dismissed, nothing stored
+
+
 class ConceptStore:
     def __init__(self, path: Path | None = None) -> None:
         self.path = path or paths.concepts_file()
@@ -85,18 +103,32 @@ class ConceptStore:
     def get(self, cid: str) -> Concept | None:
         return self._load().get(cid)
 
-    def add(self, name: str, category: str, summary: str, source: Source) -> tuple[Concept, bool]:
-        """Add a concept, or attach the source if it already exists. Returns (concept, created)."""
-        cid = concept_id(name)
+    def add(self, name: str, category: str, summary: str, source: Source) -> tuple[Concept, Outcome]:
+        """Add a concept, or attach the source if it already exists (see `record`)."""
+        return self.record([Entry(name, category, summary, source)])[0]
+
+    def record(self, entries: list[Entry]) -> list[tuple[Concept, Outcome]]:
+        """Store a detection batch in one transaction, so it lands whole or not at all.
+
+        Unknown names become `new` concepts. Known ones get the source attached, except dismissed
+        ones, which get nothing (ADR 0018). The existing name, category and summary are kept.
+        """
+        out = []
         with self._transaction() as concepts:
-            existing = concepts.get(cid)
-            if existing:
-                existing.sources.append(source)
-                existing.updated_at = now()
-                return existing, False
-            concept = Concept(id=cid, name=name, category=category, summary=summary, sources=[source])
-            concepts[cid] = concept
-            return concept, True
+            for e in entries:
+                cid = concept_id(e.name)
+                existing = concepts.get(cid)
+                if existing is None:
+                    concept = Concept(id=cid, name=e.name, category=e.category, summary=e.summary, sources=[e.source])
+                    concepts[cid] = concept
+                    out.append((concept, Outcome.CREATED))
+                elif existing.status is Status.DISMISSED:
+                    out.append((existing, Outcome.DISMISSED))
+                else:
+                    existing.sources.append(e.source)
+                    existing.updated_at = now()
+                    out.append((existing, Outcome.ATTACHED))
+        return out
 
     def add_source(self, cid: str, source: Source) -> Concept:
         with self._transaction() as concepts:

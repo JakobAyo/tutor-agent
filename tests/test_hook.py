@@ -61,12 +61,12 @@ def wait_for(predicate, timeout=15.0):
 
 
 def test_hook_starts_detached_detect(tmp_path, data_dir):
-    """End to end: the hook returns at once, silent, and the detector reads the batch."""
+    """End to end: the hook returns at once, silent, and the detector runs (on the fake claude)."""
     path = t.write(tmp_path / f"{t.SESSION}.jsonl", t.turn(0))
     proc, _ = run_hook(stop(path))
     assert (proc.returncode, proc.stdout, proc.stderr) == (0, "", "")
     log = data_dir / "tutor.log"
-    assert wait_for(lambda: log.exists() and "6 events" in log.read_text())
+    assert wait_for(lambda: log.exists() and "detected" in log.read_text())
     assert (data_dir / "offsets" / f"{t.SESSION}.json").exists()
 
 

@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -29,22 +30,69 @@ def _drop_tutor_handlers() -> None:
 
 
 class FakeClaude:
-    def __init__(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        self.bin = tmp_path / "claude"
+    def __init__(self, bin_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.bin = bin_dir / "claude"
         self.bin.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{FAKE_CLAUDE}" "$@"\n')
         self.bin.chmod(0o755)
-        self.record_path = tmp_path / "fake_claude_record.json"
+        self.record_path = bin_dir / "fake_claude_record.json"
+        self.calls_path = bin_dir / "fake_claude_record.json.calls"
         self._monkeypatch = monkeypatch
         monkeypatch.setenv("FAKE_CLAUDE_RECORD", str(self.record_path))
+        monkeypatch.delenv("FAKE_CLAUDE_MODE", raising=False)
+        monkeypatch.delenv("FAKE_CLAUDE_STRUCTURED", raising=False)
 
     def mode(self, mode: str) -> None:
         self._monkeypatch.setenv("FAKE_CLAUDE_MODE", mode)
+
+    def answer(self, structured) -> None:
+        """Make the fake return this `structured_output` for `--json-schema` calls."""
+        self._monkeypatch.setenv("FAKE_CLAUDE_STRUCTURED", json.dumps(structured))
 
     @property
     def record(self) -> dict:
         return json.loads(self.record_path.read_text())
 
+    @property
+    def calls(self) -> int:
+        return len(self.calls_path.read_text().splitlines()) if self.calls_path.exists() else 0
+
+
+class FakeNotifySend:
+    """Records each `notify-send` call as one JSON line (its argv)."""
+
+    def __init__(self, bin_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self.record_path = bin_dir / "notify-send.jsonl"
+        script = bin_dir / "notify-send"
+        script.write_text(
+            f'#!{sys.executable}\nimport json, sys\n'
+            f'open({str(self.record_path)!r}, "a").write(json.dumps(sys.argv[1:]) + "\\n")\n'
+        )
+        script.chmod(0o755)
+
+    @property
+    def calls(self) -> list[list[str]]:
+        if not self.record_path.exists():
+            return []
+        return [json.loads(line) for line in self.record_path.read_text().splitlines()]
+
+
+@pytest.fixture(autouse=True)
+def fake_bins(request, tmp_path_factory, monkeypatch):
+    """Offline tests get a fake `claude` and `notify-send` first on PATH, also for subprocesses
+    such as the detached detector, so no test spends usage or shows a notification."""
+    if request.node.get_closest_marker("real") or request.node.get_closest_marker("prompt"):
+        yield None
+        return
+    bin_dir = tmp_path_factory.mktemp("bin")  # not in tmp_path: some tests check what is there
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ.get('PATH', '')}")
+    yield FakeClaude(bin_dir, monkeypatch), FakeNotifySend(bin_dir, monkeypatch)
+
 
 @pytest.fixture
-def fake_claude(tmp_path, monkeypatch) -> FakeClaude:
-    return FakeClaude(tmp_path, monkeypatch)
+def fake_claude(fake_bins) -> FakeClaude:
+    return fake_bins[0]
+
+
+@pytest.fixture
+def fake_notify(fake_bins) -> FakeNotifySend:
+    return fake_bins[1]

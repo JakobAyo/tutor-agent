@@ -4,7 +4,7 @@ import multiprocessing as mp
 import pytest
 
 from tutor_agent import paths
-from tutor_agent.store import ConceptStore, Source, Status, StoreError, concept_id
+from tutor_agent.store import ConceptStore, Entry, Outcome, Source, Status, StoreError, concept_id
 
 
 def src(text="x = 1", context="the agent did a thing"):
@@ -19,8 +19,8 @@ def test_concept_id_normalizes_names():
 
 def test_add_and_reload():
     store = ConceptStore()
-    concept, created = store.add("Atomic file writes", "mechanism", "Write to temp, then rename.", src())
-    assert created and concept.status is Status.NEW
+    concept, outcome = store.add("Atomic file writes", "mechanism", "Write to temp, then rename.", src())
+    assert outcome is Outcome.CREATED and concept.status is Status.NEW
     loaded = ConceptStore().get("atomic-file-writes")
     assert loaded == concept
     assert loaded.sources[0].snippet == "x = 1"
@@ -29,11 +29,28 @@ def test_add_and_reload():
 def test_adding_existing_name_attaches_source():
     store = ConceptStore()
     store.add("Retry with backoff", "pattern", "s", src("a"))
-    concept, created = store.add("retry with backoff", "pattern", "other summary", src("b"))
-    assert not created
+    concept, outcome = store.add("retry with backoff", "pattern", "other summary", src("b"))
+    assert outcome is Outcome.ATTACHED
     assert concept.summary == "s"
     assert [s.snippet for s in concept.sources] == ["a", "b"]
     assert len(store.list()) == 1
+
+
+def test_dismissed_concept_gets_no_new_source():
+    store = ConceptStore()
+    store.add("Idempotency", "pattern", "s", src("a"))
+    store.set_status("idempotency", Status.DISMISSED)
+    concept, outcome = store.add("idempotency", "pattern", "s", src("b"))
+    assert outcome is Outcome.DISMISSED
+    assert [s.snippet for s in store.get("idempotency").sources] == ["a"]
+
+
+def test_record_stores_a_batch_in_one_write():
+    store = ConceptStore()
+    store.add("Known", "pattern", "s", src("a"))
+    results = store.record([Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))])
+    assert [o for _, o in results] == [Outcome.CREATED, Outcome.ATTACHED]
+    assert len(store.get("known").sources) == 2
 
 
 def test_status_changes():
