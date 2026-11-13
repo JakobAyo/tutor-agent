@@ -17,7 +17,7 @@ The detection prompt, concept storage, notifications.
 
 ## Done when
 - [x] The hook returns in about 100 ms (measured).
-- [ ] In real sessions, including ones with subagents, each batch holds exactly the new events.
+- [x] In real sessions, including ones with subagents, each batch holds exactly the new events.
 - [x] A crash in `tutor detect` shows up only in the tutor log, never in the agent session.
 - [x] Reader and pre-filter are tested with the M0 fixture transcripts.
 
@@ -33,4 +33,11 @@ Decisions: [0025](../decisions/0025-byte-offsets-per-session.md) (offsets, lock,
 | Install | `tests/test_install.py`: keeps other hooks, idempotent, replaces an old path, uninstall restores the original, backup, file mode kept, refuses invalid JSON. Not yet run on the real `~/.claude/settings.json` |
 | Offline tests | `uv run pytest`: 96 tests |
 
-Still open: run `tutor install`, then check `tutor.log` in real sessions with and without subagents (including a background subagent, where `Stop` fires twice).
+## Real-session check (2026-11-13)
+`tutor install` ran on the real `~/.claude/settings.json`; `tutor.log` covers 6 sessions over a day of normal use.
+
+| Item | Evidence |
+|---|---|
+| Exactly the new events | Per session, the batch line ranges are contiguous with no gaps or overlaps (e.g. `7eb1f325`: 1-50, 51-70, … 444-460, 461-468) |
+| Background subagents | Session `64223d39` ran two background subagents. Main `Stop` (174-185), subagent batch (1-104), second `Stop` after it finished (186-190), second subagent (1-281). Each transcript keeps its own offset, nothing read twice |
+| Ghost `SubagentStop` | About 1 s after most `Stop`s, a `SubagentStop` names an `agent-a<hex>.jsonl` that is never written (23 cases, also in sessions without any subagent): an internal Claude Code helper agent. It used to log a `FileNotFoundError` traceback; now `tutor detect` logs one `skip … no transcript (internal agent)` line. A missing main transcript is still an error |

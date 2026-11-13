@@ -42,6 +42,14 @@ def test_detect_logs_skipped_batch(tmp_path, data_dir):
     assert "skip" in (data_dir / "tutor.log").read_text()
 
 
+def test_detect_skips_subagent_without_transcript(tmp_path, data_dir):
+    # Seen in real sessions: SubagentStop for an internal agent whose transcript never exists.
+    path = tmp_path / t.SESSION / "subagents" / "agent-a0123456789abcdef.jsonl"
+    assert cli.main(["detect", str(path)]) == 0
+    log = (data_dir / "tutor.log").read_text()
+    assert "no transcript (internal agent)" in log and "Traceback" not in log
+
+
 def test_install_uses_claude_config_dir(monkeypatch, tmp_path, capsys):
     monkeypatch.setenv("CLAUDE_CONFIG_DIR", str(tmp_path))
     monkeypatch.setattr("sys.argv", ["/opt/bin/tutor", "install"])

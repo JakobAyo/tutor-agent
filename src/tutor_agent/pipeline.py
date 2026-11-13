@@ -12,6 +12,11 @@ from tutor_agent.log import get_logger
 def process(transcript: Path, session_id: str | None, *, dry_run: bool) -> int:
     log = get_logger()
     try:
+        # Claude Code runs internal helper agents after a turn: they fire `SubagentStop` but never
+        # write a transcript. Not an error, so no traceback. A missing main transcript still is.
+        if transcript.parent.name == "subagents" and not transcript.exists():
+            log.info("skip %s: no transcript (internal agent)", transcript.name)
+            return 0
         batch = reader.read_new(transcript, session_id, advance=not dry_run)
         where = f"{batch.transcript.name} lines {batch.first_line}-{batch.last_line}"
         reason = prefilter.skip_reason(batch.events)
