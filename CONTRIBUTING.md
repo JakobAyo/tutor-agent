@@ -19,6 +19,14 @@ uv run mypy tests --allow-untyped-defs --allow-incomplete-defs --allow-untyped-c
 uv run pytest --cov                  # offline tests, coverage must stay >= 90%
 ```
 
+### Keep private data out
+
+This tool reads real transcripts, so fixtures and docs can easily leak personal data. CI and
+pre-commit run gitleaks and `scripts/check_private_data.py`, which flags home paths, Claude project
+slugs and emails. Use placeholders: `/home/u`, `-home-u-`, `someone@example.com`. To also catch
+your name, employer or internal project names, list them one per line in `.private-terms` (it is
+gitignored). In CI, the repo secret `PRIVATE_TERMS` does the same job.
+
 The offline tests use a fake `claude` binary and spend nothing. Two opt-in suites call the real
 model on your subscription: `uv run pytest -m real` (one Haiku call) and `uv run pytest -m prompt`
 (prompt-quality checks, about $0.05). CI never runs them.

@@ -13,3 +13,6 @@ You'll get an answer within a week.
 `tutor-agent` reads your Claude Code transcripts and passes excerpts to `claude -p`, so the most
 relevant issues are: transcript content escaping the sandboxed model call, the hook affecting the
 observed session, and local data (`~/.local/share/tutor-agent/`) being readable by other users.
+
+If you find personal data (paths, names, emails) committed in this repo or its history, report it
+the same way so it can be removed without drawing attention to it.
