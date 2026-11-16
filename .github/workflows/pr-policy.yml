@@ -4,8 +4,12 @@
 #  - only develop, release-please and hotfix branches may target main
 name: PR policy
 
+#
+# Uses `pull_request`, not `pull_request_target`: the latter always runs the default branch's
+# copy of the workflow (main), and is blocked by default in public repos from 2026-12-02.
+# These checks only read PR metadata, so the read-only token is all they need.
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, edited, synchronize, reopened]
     branches: [develop, main]
 
