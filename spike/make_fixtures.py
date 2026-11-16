@@ -1,6 +1,9 @@
 """Spike Q7: cut chosen transcript turns into anonymized fixture batches.
 
-Usage: python spike/make_fixtures.py   (writes tests/fixtures/batches/*.json)
+Usage: python spike/make_fixtures.py NAME=TRANSCRIPT[:TURN] ...
+  writes tests/fixtures/batches/NAME.json; without :TURN the whole transcript is one batch.
+  The transcripts are private, so they are passed in and never named in the repo.
+  Set TUTOR_REDACT (comma-separated words) to hide more names, e.g. projects or a company.
 """
 import json
 import sys
@@ -9,20 +12,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from extract_events import anonymize, events, turns  # noqa: E402
 
-P = Path.home() / ".claude/projects"
-CHOSEN = {  # name: (transcript, turn index or None for the whole file)
-    "harness-gates-python": (P / "<transcript>.jsonl", 1),
-    "ics-meeting-widget": (P / "<transcript>.jsonl", 1),
-    "qml-animation-widget": (P / "<transcript>.jsonl", 0),
-    "supervisor-loop": (P / "<transcript>.jsonl", 0),
-    "subagent": (Path(sys.argv[1]) if len(sys.argv) > 1 else None, None),
-}
 out = Path(__file__).parent.parent / "tests/fixtures/batches"
 out.mkdir(parents=True, exist_ok=True)
-for name, (path, idx) in CHOSEN.items():
-    if path is None:
-        continue
-    batch = [e for _, e in events(path)] if idx is None else list(turns(path))[idx]
+for arg in sys.argv[1:]:
+    name, spec = arg.split("=", 1)
+    path, _, idx = spec.partition(":")
+    batch = [e for _, e in events(Path(path))] if not idx else list(turns(Path(path)))[int(idx)]
     batch = json.loads(anonymize(json.dumps(batch)))
     for e in batch:
         e["transcript_ref"] = f"<transcript>:{e['transcript_ref'].rsplit(':', 1)[1]}"

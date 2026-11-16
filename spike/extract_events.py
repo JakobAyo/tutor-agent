@@ -8,6 +8,7 @@ Usage:
 Throwaway code: the real reader is built in M2.
 """
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -105,7 +106,8 @@ def turns(path: Path):
 def anonymize(text: str) -> str:
     text = text.replace(HOME, "~")
     text = re.sub(r"[\w.+-]+@[\w-]+\.[\w.]+", "<email>", text)
-    text = re.sub(r"(?i)\bexample-corp\b", "<company>", text)
+    for word in filter(None, os.environ.get("TUTOR_REDACT", "").split(",")):
+        text = re.sub(rf"(?i){re.escape(word.strip())}", "<redacted>", text)
     return re.sub(rf"(?i){re.escape(Path.home().name)}\w*", "<user>", text)
 
 
