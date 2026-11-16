@@ -47,7 +47,9 @@ def get_logger() -> logging.Logger:
     """The tutor logger, writing to the data directory. Set up once per process."""
     logger = logging.getLogger(LOGGER_NAME)
     if not any(isinstance(h, TutorFileHandler) for h in logger.handlers):
-        handler = TutorFileHandler(paths.log_file(), maxBytes=1_000_000, backupCount=2, encoding="utf-8")
+        handler = TutorFileHandler(
+            paths.log_file(), maxBytes=1_000_000, backupCount=2, encoding="utf-8"
+        )
         handler.setFormatter(logging.Formatter("%(asctime)s %(process)d %(levelname)s %(message)s"))
         handler.addFilter(_secret_filter)
         logger.addHandler(handler)

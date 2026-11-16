@@ -1,0 +1,31 @@
+# Weekly dependency PRs into develop. Their titles are Conventional Commits, so they pass
+# the PR-title check and show up under "Dependencies" in the CHANGELOG (runtime deps only).
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: deps # runtime dependency -> listed in the CHANGELOG
+      prefix-development: chore # dev tools -> hidden from the CHANGELOG
+      include: scope
+    groups:
+      dev-tools:
+        dependency-type: development
+        update-types: [minor, patch]
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci
+    groups:
+      actions:
+        patterns: ["*"]

@@ -19,7 +19,13 @@ Design phase, no code yet. Decided: Claude Code only (all sessions, including su
 
 ## Commands
 - `uv sync`: set up the dev environment.
-- `uv run pytest`: offline tests (a fake `claude`, no usage spent).
+- `uv run pytest`: offline tests (a fake `claude`, no usage spent). `--cov` enforces the 90% floor.
+- Quality gates (CI runs the same): `uv run ruff check`, `uv run ruff format --check`, `uv run mypy` (strict, src), `uv run mypy tests --allow-untyped-defs --allow-incomplete-defs --allow-untyped-calls --check-untyped-defs`. `uv run pre-commit install --hook-type pre-commit --hook-type commit-msg` runs them on commit.
+
+## Git workflow (ADR 0033)
+- Branch off `develop`. PRs into `develop` are squash-merged, and the PR title must be a Conventional Commit (it drives the version and the CHANGELOG).
+- `develop` → `main` with a merge commit. release-please then opens a release PR. Merging it tags, publishes to PyPI, and opens a back-merge PR into `develop`.
+- Never edit `CHANGELOG.md` or the version by hand.
 - `uv run pytest -m real`: the one real `claude -p` call (Haiku, about $0.001).
 - `uv run pytest -m prompt`: detection quality on the five M0 fixtures plus one real M6 batch (7 Haiku calls, about $0.05), lesson quality (1 Sonnet call), and follow-up and explanation quality (2 Sonnet calls).
 - `tutor tui`: the tutor pane (Enter opens a lesson, `u`/`s`/`d`/`n` change status, `r` regenerates, `h` shows dismissed, `f` asks a follow-up, `w` explains a recent session's latest turn, `x` shows it again).

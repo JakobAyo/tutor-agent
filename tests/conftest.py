@@ -3,6 +3,7 @@ import logging
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -49,8 +50,9 @@ class FakeClaude:
         self._monkeypatch.setenv("FAKE_CLAUDE_STRUCTURED", json.dumps(structured))
 
     @property
-    def record(self) -> dict:
-        return json.loads(self.record_path.read_text())
+    def record(self) -> dict[str, Any]:
+        data: dict[str, Any] = json.loads(self.record_path.read_text())
+        return data
 
     @property
     def calls(self) -> int:
@@ -64,7 +66,7 @@ class FakeNotifySend:
         self.record_path = bin_dir / "notify-send.jsonl"
         script = bin_dir / "notify-send"
         script.write_text(
-            f'#!{sys.executable}\nimport json, sys\n'
+            f"#!{sys.executable}\nimport json, sys\n"
             f'open({str(self.record_path)!r}, "a").write(json.dumps(sys.argv[1:]) + "\\n")\n'
         )
         script.chmod(0o755)
@@ -92,9 +94,11 @@ def fake_bins(request, tmp_path_factory, monkeypatch):
 
 @pytest.fixture
 def fake_claude(fake_bins) -> FakeClaude:
-    return fake_bins[0]
+    claude: FakeClaude = fake_bins[0]
+    return claude
 
 
 @pytest.fixture
 def fake_notify(fake_bins) -> FakeNotifySend:
-    return fake_bins[1]
+    notify: FakeNotifySend = fake_bins[1]
+    return notify

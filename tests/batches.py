@@ -10,4 +10,7 @@ NAMES = sorted(p.stem for p in DIR.glob("*.json"))
 
 
 def load(name: str) -> list[Event]:
-    return [Event(**{**e, "kind": Kind(e["kind"])}) for e in json.loads((DIR / f"{name}.json").read_text())]
+    return [
+        Event(**{**e, "kind": Kind(e["kind"])})
+        for e in json.loads((DIR / f"{name}.json").read_text())
+    ]

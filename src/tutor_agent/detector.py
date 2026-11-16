@@ -43,7 +43,14 @@ SCHEMA = {
                     "event_index": {"type": "integer"},
                     "reuses_known": {"type": "boolean"},
                 },
-                "required": ["name", "category", "summary", "why_here", "event_index", "reuses_known"],
+                "required": [
+                    "name",
+                    "category",
+                    "summary",
+                    "why_here",
+                    "event_index",
+                    "reuses_known",
+                ],
             },
         }
     },
@@ -57,7 +64,8 @@ Report a concept only if BOTH are true:
 1. It is reusable understanding that helps read FUTURE code: design patterns, architecture,
    concurrency, testing strategies, tooling internals, infrastructure, language mechanisms,
    AI/LLM engineering, or a trade-off the agent made.
-2. It actually shows up in the events (code written, a command run, or a decision the agent explained).
+2. It actually shows up in the events (code written, a command run, or a decision the agent \
+explained).
 
 Never report: basic syntax (loops, conditionals, assignment), a single API call with no idea
 behind it, renames, formatting, or facts about this one project.
@@ -107,10 +115,13 @@ def snippet(event: Event) -> str:
     lines = event.content.splitlines()
     if len(lines) <= SNIPPET_LINES:
         return event.content
-    return "\n".join(lines[:SNIPPET_LINES]) + f"\n[... {len(lines) - SNIPPET_LINES} more lines cut ...]"
+    return (
+        "\n".join(lines[:SNIPPET_LINES])
+        + f"\n[... {len(lines) - SNIPPET_LINES} more lines cut ...]"
+    )
 
 
-def parse(structured, events: list[Event]) -> list[Candidate]:
+def parse(structured: object, events: list[Event]) -> list[Candidate]:
     """Turn the structured output into candidates. Bad items are logged and dropped."""
     log = get_logger()
     if not isinstance(structured, dict) or not isinstance(structured.get("concepts"), list):
@@ -125,7 +136,7 @@ def parse(structured, events: list[Event]) -> list[Candidate]:
     return out
 
 
-def _candidate(raw, events: list[Event]) -> Candidate:
+def _candidate(raw: object, events: list[Event]) -> Candidate:
     if not isinstance(raw, dict):
         raise InvalidItem("not an object")
     texts = {}

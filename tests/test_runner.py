@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Any
 
 import pytest
 
@@ -83,15 +84,21 @@ def test_missing_structured_output_raises(fake_claude):
         call(fake_claude, json_schema=SCHEMA)
 
 
-def ledger() -> list[dict]:
+def ledger() -> list[dict[str, Any]]:
     import json
+
     return [json.loads(line) for line in paths.usage_file().read_text().splitlines()]
 
 
 def test_call_is_written_to_the_usage_ledger(fake_claude):
     call(fake_claude, model="sonnet", job="lesson")
     [rec] = ledger()
-    assert (rec["job"], rec["model"], rec["cost_usd"], rec["ok"]) == ("lesson", "sonnet", 0.001, True)
+    assert (rec["job"], rec["model"], rec["cost_usd"], rec["ok"]) == (
+        "lesson",
+        "sonnet",
+        0.001,
+        True,
+    )
     assert rec["ms"] >= 0 and rec["at"]
     assert paths.usage_file().stat().st_mode & 0o077 == 0
 
@@ -121,7 +128,9 @@ def test_timeout_kills_process_group(fake_claude):
     with pytest.raises(ClaudeError, match="timed out"):
         call(fake_claude, timeout_s=1.5)
     assert time.monotonic() - start < 10
-    child_pid = int((fake_claude.record_path.parent / (fake_claude.record_path.name + ".child")).read_text())
+    child_pid = int(
+        (fake_claude.record_path.parent / (fake_claude.record_path.name + ".child")).read_text()
+    )
     for _ in range(50):
         try:
             os.kill(child_pid, 0)
@@ -144,7 +153,7 @@ def test_token_from_env_file_is_passed(fake_claude, monkeypatch):
     env_file.write_text("# comment\nCLAUDE_CODE_OAUTH_TOKEN='sk-ant-oat-secret'\n")
     env_file.chmod(0o600)
     call(fake_claude)
-    assert fake_claude.record["env"]["CLAUDE_CODE_OAUTH_TOKEN"] == "sk-ant-oat-secret"
+    assert fake_claude.record["env"]["CLAUDE_CODE_OAUTH_TOKEN"] == "sk-ant-oat-secret"  # noqa: S105  # fake token
 
 
 def test_token_never_reaches_log(fake_claude):
