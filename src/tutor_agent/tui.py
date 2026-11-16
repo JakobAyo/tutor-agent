@@ -45,7 +45,9 @@ def ordered(concepts: list[Concept], show_dismissed: bool) -> list[tuple[Status,
     for status in GROUPS:
         if status is Status.DISMISSED and not show_dismissed:
             continue
-        group = sorted((c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True)
+        group = sorted(
+            (c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True
+        )
         if group:
             out.append((status, group))
     return out
@@ -92,7 +94,9 @@ class SessionPicker(ModalScreen[explain.Session | None]):
         self.sessions = sessions
 
     def compose(self) -> ComposeResult:
-        ol = OptionList(*(Option(s.label(), id=str(i)) for i, s in enumerate(self.sessions)), id="sessions")
+        ol = OptionList(
+            *(Option(s.label(), id=str(i)) for i, s in enumerate(self.sessions)), id="sessions"
+        )
         ol.border_title = "What just happened in…"
         yield ol
 
@@ -125,8 +129,13 @@ class TutorApp(App):
         Binding("q", "quit", "Quit"),
     ]
 
-    def __init__(self, store: ConceptStore | None = None, cache: lessons.LessonCache | None = None,
-                 cfg: settings.Settings | None = None, poll_s: float = 1.0) -> None:
+    def __init__(
+        self,
+        store: ConceptStore | None = None,
+        cache: lessons.LessonCache | None = None,
+        cfg: settings.Settings | None = None,
+        poll_s: float = 1.0,
+    ) -> None:
         super().__init__()
         self.store = store or ConceptStore()
         self.cache = cache or lessons.LessonCache()
@@ -136,7 +145,9 @@ class TutorApp(App):
         self.concepts: dict[str, Concept] = {}
         self.generating: set[str] = set()
         self.errors: dict[str, str] = {}  # last failed generation per concept, shown until retried
-        self.threads: dict[str, list[followups.Turn]] = {}  # follow-ups per concept, kept while open
+        self.threads: dict[
+            str, list[followups.Turn]
+        ] = {}  # follow-ups per concept, kept while open
         self.asking: dict[str, str] = {}  # concept id -> the question being answered
         self.explaining: explain.Session | None = None
         self.explanation: tuple[explain.Session, str] | None = None  # the last one, for `x`
@@ -155,7 +166,9 @@ class TutorApp(App):
                 with VerticalScroll(id="lesson-pane") as self.lesson_pane:
                     self.lesson_md = Markdown(id="lesson")
                     yield self.lesson_md
-                self.ask_input = Input(placeholder="f: ask a follow-up about the open lesson · Esc: back", id="ask")
+                self.ask_input = Input(
+                    placeholder="f: ask a follow-up about the open lesson · Esc: back", id="ask"
+                )
                 yield self.ask_input
         yield Footer()
 
@@ -190,7 +203,9 @@ class TutorApp(App):
         keep = self.highlighted_id()
         option_list.clear_options()
         for status, group in ordered(list(self.concepts.values()), self.show_dismissed):
-            option_list.add_option(Option(Text(f"{status.upper()} ({len(group)})", style="bold"), disabled=True))
+            option_list.add_option(
+                Option(Text(f"{status.upper()} ({len(group)})", style="bold"), disabled=True)
+            )
             for c in group:
                 label = Text(c.name)
                 label.append(f"\n  {c.category} · {project_name(c)}", style="dim")
@@ -210,8 +225,14 @@ class TutorApp(App):
             except Exception:  # hidden now (dismissed) or gone
                 index = None
         if index is None:
-            index = next((i for i in range(option_list.option_count)
-                          if not option_list.get_option_at_index(i).disabled), None)
+            index = next(
+                (
+                    i
+                    for i in range(option_list.option_count)
+                    if not option_list.get_option_at_index(i).disabled
+                ),
+                None,
+            )
         if index is not None:
             option_list.highlighted = index
         self.show_current()
@@ -339,12 +360,20 @@ class TutorApp(App):
         event.input.clear()
         self.asking[concept.id] = question
         known = followups.known_concepts(list(self.concepts.values()), exclude=concept.id)
-        self.answer_followup(concept, lesson, list(self.threads.get(concept.id, [])), known, question)
+        self.answer_followup(
+            concept, lesson, list(self.threads.get(concept.id, [])), known, question
+        )
         self.show_current(scroll_end=True)
 
     @work(thread=True, group="followups")
-    def answer_followup(self, concept: Concept, lesson: lessons.Lesson, thread: list[followups.Turn],
-                        known: list[Concept], question: str) -> None:
+    def answer_followup(
+        self,
+        concept: Concept,
+        lesson: lessons.Lesson,
+        thread: list[followups.Turn],
+        known: list[Concept],
+        question: str,
+    ) -> None:
         try:
             text, error = followups.answer(concept, lesson, thread, known, question, self.cfg), None
         except Exception as e:  # ClaudeError, FollowUpError: shown as a notification, logged
@@ -384,7 +413,9 @@ class TutorApp(App):
             return
         self.explaining = session
         self.showing_explanation = True
-        self.show_markdown(f"# What just happened\n\n{session.label()}\n\nReading the latest turn…", loading=True)
+        self.show_markdown(
+            f"# What just happened\n\n{session.label()}\n\nReading the latest turn…", loading=True
+        )
         self.explain_turn(session, followups.known_concepts(list(self.concepts.values())))
 
     @work(thread=True, group="explain")
@@ -393,13 +424,17 @@ class TutorApp(App):
             turn = explain.latest_turn(session)
             text, error = explain.explain(turn, known, self.cfg), None
             if turn.dropped_events:
-                text += f"\n\n*{turn.dropped_events} earlier events of this long turn were left out.*"
+                text += (
+                    f"\n\n*{turn.dropped_events} earlier events of this long turn were left out.*"
+                )
         except Exception as e:  # OSError, ClaudeError, ExplainError
             get_logger().exception("explanation failed for %s", session.transcript)
             text, error = None, str(e) or type(e).__name__
         self.call_from_thread(self.explanation_done, session, text, error)
 
-    def explanation_done(self, session: explain.Session, text: str | None, error: str | None) -> None:
+    def explanation_done(
+        self, session: explain.Session, text: str | None, error: str | None
+    ) -> None:
         self.explaining = None
         if error:
             self.notify(f"Explanation failed: {error}", severity="error")
@@ -424,7 +459,9 @@ class TutorApp(App):
         session, text = self.explanation
         self.showing_explanation = True
         project = session.project or "unknown project"
-        self.show_markdown(f"# What just happened\n\n*{project} · session {session.session_id[:8]}*\n\n{text}")
+        self.show_markdown(
+            f"# What just happened\n\n*{project} · session {session.session_id[:8]}*\n\n{text}"
+        )
 
     # --- status actions -----------------------------------------------------------------------
 

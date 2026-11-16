@@ -6,15 +6,29 @@ from tutor_agent.lessons import Lesson
 from tutor_agent.settings import Settings
 from tutor_agent.store import Concept, Source, Status
 
-SOURCE = Source(snippet="for delay in (1, 2, 4):\n    ...", context="the agent wrapped a flaky call",
-                project="/home/me/Projects/api", file="/home/me/Projects/api/client.py")
+SOURCE = Source(
+    snippet="for delay in (1, 2, 4):\n    ...",
+    context="the agent wrapped a flaky call",
+    project="/home/me/Projects/api",
+    file="/home/me/Projects/api/client.py",
+)
 LESSON = Lesson("retry-with-backoff", "## What the agent did\nIt retries.", "sonnet", "t", SOURCE)
 
 
-def concept(cid="retry-with-backoff", status=Status.SEEN, updated="2026-11-13T10:00:00+00:00", **kw) -> Concept:
+def concept(
+    cid="retry-with-backoff", status=Status.SEEN, updated="2026-11-13T10:00:00+00:00", **kw
+) -> Concept:
     name = kw.pop("name", cid.replace("-", " ").capitalize())
-    return Concept(id=cid, name=name, category="Design patterns", summary=f"About {name}.",
-                   status=status, updated_at=updated, sources=[SOURCE], **kw)
+    return Concept(
+        id=cid,
+        name=name,
+        category="Design patterns",
+        summary=f"About {name}.",
+        status=status,
+        updated_at=updated,
+        sources=[SOURCE],
+        **kw,
+    )
 
 
 def test_known_concepts_are_seen_or_understood_newest_first_without_the_lesson_itself():

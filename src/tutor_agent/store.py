@@ -73,8 +73,14 @@ class Concept:
     sources: list[Source] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "Concept":
-        return cls(**{**raw, "status": Status(raw["status"]), "sources": [Source(**s) for s in raw["sources"]]})
+    def from_dict(cls, raw: dict) -> Concept:
+        return cls(
+            **{
+                **raw,
+                "status": Status(raw["status"]),
+                "sources": [Source(**s) for s in raw["sources"]],
+            }
+        )
 
 
 @dataclass(frozen=True)
@@ -104,7 +110,9 @@ class ConceptStore:
     def get(self, cid: str) -> Concept | None:
         return self._load().get(cid)
 
-    def add(self, name: str, category: str, summary: str, source: Source) -> tuple[Concept, Outcome]:
+    def add(
+        self, name: str, category: str, summary: str, source: Source
+    ) -> tuple[Concept, Outcome]:
         """Add a concept, or attach the source if it already exists (see `record`)."""
         return self.record([Entry(name, category, summary, source)])[0]
 
@@ -120,7 +128,13 @@ class ConceptStore:
                 cid = concept_id(e.name)
                 existing = concepts.get(cid)
                 if existing is None:
-                    concept = Concept(id=cid, name=e.name, category=e.category, summary=e.summary, sources=[e.source])
+                    concept = Concept(
+                        id=cid,
+                        name=e.name,
+                        category=e.category,
+                        summary=e.summary,
+                        sources=[e.source],
+                    )
                     concepts[cid] = concept
                     out.append((concept, Outcome.CREATED))
                 elif existing.status is Status.DISMISSED:

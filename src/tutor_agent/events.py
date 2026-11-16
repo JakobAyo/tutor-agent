@@ -121,7 +121,9 @@ def is_prompt(rec: dict) -> bool:
 def text_of(content) -> str:
     if isinstance(content, str):
         return content
-    return "\n".join(b.get("text", "") for b in content or [] if isinstance(b, dict) and b.get("type") == "text")
+    return "\n".join(
+        b.get("text", "") for b in content or [] if isinstance(b, dict) and b.get("type") == "text"
+    )
 
 
 class EventMapper:
@@ -173,7 +175,9 @@ class EventMapper:
                 self._bash_ids.add(b.get("id", ""))
                 out.append(ev(Kind.COMMAND, truncate((b.get("input") or {}).get("command", ""))))
             elif t == "tool_result" and b.get("tool_use_id") in self._bash_ids:
-                out.append(ev(Kind.TOOL_RESULT, truncate(text_of(b.get("content")), MAX_TOOL_RESULT)))
+                out.append(
+                    ev(Kind.TOOL_RESULT, truncate(text_of(b.get("content")), MAX_TOOL_RESULT))
+                )
         return out
 
 

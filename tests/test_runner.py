@@ -85,13 +85,19 @@ def test_missing_structured_output_raises(fake_claude):
 
 def ledger() -> list[dict]:
     import json
+
     return [json.loads(line) for line in paths.usage_file().read_text().splitlines()]
 
 
 def test_call_is_written_to_the_usage_ledger(fake_claude):
     call(fake_claude, model="sonnet", job="lesson")
     [rec] = ledger()
-    assert (rec["job"], rec["model"], rec["cost_usd"], rec["ok"]) == ("lesson", "sonnet", 0.001, True)
+    assert (rec["job"], rec["model"], rec["cost_usd"], rec["ok"]) == (
+        "lesson",
+        "sonnet",
+        0.001,
+        True,
+    )
     assert rec["ms"] >= 0 and rec["at"]
     assert paths.usage_file().stat().st_mode & 0o077 == 0
 
@@ -121,7 +127,9 @@ def test_timeout_kills_process_group(fake_claude):
     with pytest.raises(ClaudeError, match="timed out"):
         call(fake_claude, timeout_s=1.5)
     assert time.monotonic() - start < 10
-    child_pid = int((fake_claude.record_path.parent / (fake_claude.record_path.name + ".child")).read_text())
+    child_pid = int(
+        (fake_claude.record_path.parent / (fake_claude.record_path.name + ".child")).read_text()
+    )
     for _ in range(50):
         try:
             os.kill(child_pid, 0)

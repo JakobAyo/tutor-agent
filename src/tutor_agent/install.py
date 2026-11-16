@@ -68,7 +68,12 @@ def with_hook(settings: dict, command: str) -> dict:
     """Idempotent: an older tutor entry (e.g. another path) is replaced, never duplicated."""
     hooks = settings.get("hooks", {})
     ours = {
-        event: [h.get("command") for g in hooks.get(event, []) for h in g.get("hooks", []) if is_ours(h.get("command", ""))]
+        event: [
+            h.get("command")
+            for g in hooks.get(event, [])
+            for h in g.get("hooks", [])
+            if is_ours(h.get("command", ""))
+        ]
         for event in HOOK_EVENTS
     }
     if all(cmds == [command] for cmds in ours.values()):
@@ -104,10 +109,16 @@ def apply(
 
     new_text = json.dumps(new, indent=2, ensure_ascii=False) + "\n"
     old_pretty = json.dumps(old, indent=2, ensure_ascii=False) + "\n"
-    out("".join(difflib.unified_diff(
-        old_pretty.splitlines(keepends=True), new_text.splitlines(keepends=True),
-        fromfile=str(path), tofile=str(path) + " (new)",
-    )))
+    out(
+        "".join(
+            difflib.unified_diff(
+                old_pretty.splitlines(keepends=True),
+                new_text.splitlines(keepends=True),
+                fromfile=str(path),
+                tofile=str(path) + " (new)",
+            )
+        )
+    )
     if not assume_yes and ask("Write this change? [y/N] ").strip().lower() not in ("y", "yes"):
         out("Nothing written.")
         return False

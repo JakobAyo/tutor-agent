@@ -44,10 +44,13 @@ def test_prompt_length_does_not_count_as_reasoning():
     assert skip_reason(events) is not None
 
 
-@pytest.mark.parametrize("block", [
-    t.tool_use("1", "Bash", command="ls"),
-    t.tool_use("2", "Write", file_path="/a", content="b"),
-])
+@pytest.mark.parametrize(
+    "block",
+    [
+        t.tool_use("1", "Bash", command="ls"),
+        t.tool_use("2", "Write", file_path="/a", content="b"),
+    ],
+)
 def test_any_edit_or_command_passes(block):
     assert skip_reason(mapped([t.assistant(block)])) is None
 

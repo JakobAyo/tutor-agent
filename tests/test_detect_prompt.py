@@ -16,7 +16,10 @@ from tutor_agent import detector
 from tutor_agent.events import Kind
 from tutor_agent.settings import Settings
 
-pytestmark = [pytest.mark.prompt, pytest.mark.skipif(shutil.which("claude") is None, reason="claude not installed")]
+pytestmark = [
+    pytest.mark.prompt,
+    pytest.mark.skipif(shutil.which("claude") is None, reason="claude not installed"),
+]
 
 EXPECTED = {
     "harness-gates-python": r"infra|budget|timeout|baseline|preflight|fail.fast|limit|backstop",

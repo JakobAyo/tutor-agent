@@ -34,9 +34,13 @@ class Turn:
     answer: str
 
 
-def known_concepts(concepts: list[Concept], exclude: str | None = None, limit: int = MAX_KNOWN) -> list[Concept]:
+def known_concepts(
+    concepts: list[Concept], exclude: str | None = None, limit: int = MAX_KNOWN
+) -> list[Concept]:
     """What I already know: `seen` and `understood` concepts, most recently touched first."""
-    known = [c for c in concepts if c.status in (Status.SEEN, Status.UNDERSTOOD) and c.id != exclude]
+    known = [
+        c for c in concepts if c.status in (Status.SEEN, Status.UNDERSTOOD) and c.id != exclude
+    ]
     known.sort(key=lambda c: c.updated_at, reverse=True)
     return known[:limit]
 
@@ -65,7 +69,9 @@ def trim_thread(thread: list[Turn], budget: int = THREAD_BUDGET) -> tuple[list[T
     return kept, len(thread) - len(kept)
 
 
-def build_prompt(concept: Concept, lesson: Lesson, thread: list[Turn], known: list[Concept], question: str) -> str:
+def build_prompt(
+    concept: Concept, lesson: Lesson, thread: list[Turn], known: list[Concept], question: str
+) -> str:
     source = lesson.source
     f = fence(source.snippet)
     lines = [
@@ -81,7 +87,9 @@ def build_prompt(concept: Concept, lesson: Lesson, thread: list[Turn], known: li
         f"WHY IT CAME UP: {source.context}",
         "",
         "SNIPPET (what the agent wrote, ran or said):",
-        f, source.snippet, f,
+        f,
+        source.snippet,
+        f,
         "",
         "LESSON (what the learner just read):",
         lesson.text,
@@ -105,8 +113,14 @@ class FollowUpError(RuntimeError):
     pass
 
 
-def answer(concept: Concept, lesson: Lesson, thread: list[Turn], known: list[Concept], question: str,
-           settings: Settings) -> str:
+def answer(
+    concept: Concept,
+    lesson: Lesson,
+    thread: list[Turn],
+    known: list[Concept],
+    question: str,
+    settings: Settings,
+) -> str:
     """One call on the lesson model (ADR 0016). Raises `runner.ClaudeError` or `FollowUpError`."""
     result = runner.run(
         build_prompt(concept, lesson, thread, known, question),

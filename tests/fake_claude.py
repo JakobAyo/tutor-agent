@@ -11,7 +11,12 @@ import subprocess
 import sys
 import time
 
-WATCHED_ENV = ("TUTOR_AGENT_INTERNAL", "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDECODE", "CLAUDE_CODE_SESSION_ID")
+WATCHED_ENV = (
+    "TUTOR_AGENT_INTERNAL",
+    "CLAUDE_CODE_OAUTH_TOKEN",
+    "CLAUDECODE",
+    "CLAUDE_CODE_SESSION_ID",
+)
 
 
 def main() -> int:
@@ -19,8 +24,15 @@ def main() -> int:
     prompt = sys.stdin.read()
     mode = os.environ.get("FAKE_CLAUDE_MODE", "ok")
     with open(os.environ["FAKE_CLAUDE_RECORD"], "w") as f:
-        json.dump({"argv": args, "cwd": os.getcwd(), "stdin": prompt,
-                   "env": {k: os.environ.get(k) for k in WATCHED_ENV}}, f)
+        json.dump(
+            {
+                "argv": args,
+                "cwd": os.getcwd(),
+                "stdin": prompt,
+                "env": {k: os.environ.get(k) for k in WATCHED_ENV},
+            },
+            f,
+        )
     with open(os.environ["FAKE_CLAUDE_RECORD"] + ".calls", "a") as f:
         f.write(mode + "\n")
 
@@ -41,8 +53,13 @@ def main() -> int:
         time.sleep(60)
         return 0
 
-    out = {"type": "result", "subtype": "success", "is_error": mode == "is_error",
-           "result": f"echo: {prompt}", "total_cost_usd": 0.001}
+    out = {
+        "type": "result",
+        "subtype": "success",
+        "is_error": mode == "is_error",
+        "result": f"echo: {prompt}",
+        "total_cost_usd": 0.001,
+    }
     if "--json-schema" in args and mode != "no_structured":
         canned = os.environ.get("FAKE_CLAUDE_STRUCTURED")
         out["structured_output"] = json.loads(canned) if canned else {"echo": prompt}

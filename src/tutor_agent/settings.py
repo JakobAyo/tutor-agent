@@ -35,7 +35,11 @@ def load(path: Path | None = None) -> Settings:
         raise SettingsError(f"{path}: unknown keys {sorted(unknown)}")
     for key, value in raw.items():
         expected = known[key].type
-        ok = isinstance(value, (int, float)) and not isinstance(value, bool) if expected is float else isinstance(value, expected)
+        ok = (
+            isinstance(value, (int, float)) and not isinstance(value, bool)
+            if expected is float
+            else isinstance(value, expected)
+        )
         if not ok:
             raise SettingsError(f"{path}: '{key}' must be {expected.__name__}, got {value!r}")
     return Settings(**raw)

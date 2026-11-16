@@ -49,16 +49,24 @@ class RunResult:
     raw: dict
 
 
-def build_command(claude_bin: str, model: str, system_prompt: str, json_schema: dict | None) -> list[str]:
+def build_command(
+    claude_bin: str, model: str, system_prompt: str, json_schema: dict | None
+) -> list[str]:
     cmd = [
-        claude_bin, "-p",
-        "--model", model,
-        "--output-format", "json",
-        "--tools", "",
-        "--setting-sources", "",
+        claude_bin,
+        "-p",
+        "--model",
+        model,
+        "--output-format",
+        "json",
+        "--tools",
+        "",
+        "--setting-sources",
+        "",
         "--strict-mcp-config",
         "--no-session-persistence",
-        "--system-prompt", system_prompt,
+        "--system-prompt",
+        system_prompt,
     ]
     if json_schema is not None:
         cmd += ["--json-schema", json.dumps(json_schema)]
@@ -112,8 +120,14 @@ def run(
     try:
         # Own process group, so a timeout kills claude and anything it started.
         proc = subprocess.Popen(
-            cmd, cwd=cwd, env=env, text=True, start_new_session=True,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cmd,
+            cwd=cwd,
+            env=env,
+            text=True,
+            start_new_session=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
     except OSError as e:
         raise ClaudeError(f"cannot start {claude_bin!r}: {e}") from e
@@ -136,7 +150,9 @@ def run(
     usage.record(job, model, duration_ms, data.get("total_cost_usd") if data else None, ok=ok)
 
     if proc.returncode != 0:
-        log.error("claude exited %s (model=%s): %s", proc.returncode, model, (stderr or stdout)[-500:])
+        log.error(
+            "claude exited %s (model=%s): %s", proc.returncode, model, (stderr or stdout)[-500:]
+        )
         raise ClaudeError(f"claude exited with code {proc.returncode}")
     if data is None:
         log.error("claude returned non-JSON output (model=%s): %s", model, stdout[-500:])

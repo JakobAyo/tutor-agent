@@ -10,15 +10,31 @@ def kinds(records):
 
 def test_turn_maps_to_expected_kinds():
     assert kinds(t.turn()) == [
-        Kind.PROMPT, Kind.REASONING, Kind.EDIT, Kind.COMMAND, Kind.TOOL_RESULT, Kind.REASONING,
+        Kind.PROMPT,
+        Kind.REASONING,
+        Kind.EDIT,
+        Kind.COMMAND,
+        Kind.TOOL_RESULT,
+        Kind.REASONING,
     ]
 
 
 def test_event_fields():
     m = EventMapper()
-    (e,) = m.map(t.assistant(t.tool_use("1", "Write", file_path="/p/f.py", content="print(1)"), agent_id="ag1"), "f.jsonl:7")
+    (e,) = m.map(
+        t.assistant(
+            t.tool_use("1", "Write", file_path="/p/f.py", content="print(1)"), agent_id="ag1"
+        ),
+        "f.jsonl:7",
+    )
     assert (e.kind, e.file, e.content, e.agent_id, e.session_id, e.project, e.transcript_ref) == (
-        Kind.EDIT, "/p/f.py", "print(1)", "ag1", t.SESSION, "/home/u/proj", "f.jsonl:7",
+        Kind.EDIT,
+        "/p/f.py",
+        "print(1)",
+        "ag1",
+        t.SESSION,
+        "/home/u/proj",
+        "f.jsonl:7",
     )
 
 
@@ -49,7 +65,17 @@ def test_only_bash_results_are_kept():
 
 
 def test_unknown_and_odd_records_are_ignored():
-    assert kinds([t.other("file-history-delta"), {"type": "assistant"}, {"type": "user", "message": "str"}, {}]) == []
+    assert (
+        kinds(
+            [
+                t.other("file-history-delta"),
+                {"type": "assistant"},
+                {"type": "user", "message": "str"},
+                {},
+            ]
+        )
+        == []
+    )
 
 
 def test_tool_result_cut_harder():

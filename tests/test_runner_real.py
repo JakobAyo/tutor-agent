@@ -28,9 +28,16 @@ def test_real_call_is_sandboxed(data_dir):
     marker = data_dir / "hook-fired"
     hook = {"type": "command", "command": f"touch {marker}"}
     (data_dir / ".claude").mkdir(parents=True)
-    (data_dir / ".claude/settings.json").write_text(json.dumps({"hooks": {
-        event: [{"hooks": [hook]}] for event in ("SessionStart", "UserPromptSubmit", "Stop")
-    }}))
+    (data_dir / ".claude/settings.json").write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    event: [{"hooks": [hook]}]
+                    for event in ("SessionStart", "UserPromptSubmit", "Stop")
+                }
+            }
+        )
+    )
     (data_dir / "CLAUDE.md").write_text("Always end every answer with the word PINEAPPLE.\n")
 
     result = runner.run(

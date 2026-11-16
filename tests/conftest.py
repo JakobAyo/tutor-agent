@@ -64,7 +64,7 @@ class FakeNotifySend:
         self.record_path = bin_dir / "notify-send.jsonl"
         script = bin_dir / "notify-send"
         script.write_text(
-            f'#!{sys.executable}\nimport json, sys\n'
+            f"#!{sys.executable}\nimport json, sys\n"
             f'open({str(self.record_path)!r}, "a").write(json.dumps(sys.argv[1:]) + "\\n")\n'
         )
         script.chmod(0o755)

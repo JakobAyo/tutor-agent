@@ -13,8 +13,12 @@ def rec(at, job="detect", cost=0.001, ok=True, ms=1000):
 
 
 def test_per_day_sums_calls_cost_and_failures():
-    write(rec("2026-11-12T10:00:00+00:00"), rec("2026-11-13T10:00:00+00:00", job="lesson", cost=0.015),
-          rec("2026-11-13T11:00:00+00:00", cost=None, ok=False), rec("2026-11-13T12:00:00+00:00"))
+    write(
+        rec("2026-11-12T10:00:00+00:00"),
+        rec("2026-11-13T10:00:00+00:00", job="lesson", cost=0.015),
+        rec("2026-11-13T11:00:00+00:00", cost=None, ok=False),
+        rec("2026-11-13T12:00:00+00:00"),
+    )
     days = usage.per_day()
     assert list(days) == ["2026-11-12", "2026-11-13"]
     d = days["2026-11-13"]
@@ -29,7 +33,9 @@ def test_no_ledger_means_no_days():
 
 
 def test_stats_prints_memory_and_usage(capsys):
-    ConceptStore().add("Retry with backoff", "Design patterns", "s", Source(snippet="x", context="c"))
+    ConceptStore().add(
+        "Retry with backoff", "Design patterns", "s", Source(snippet="x", context="c")
+    )
     write(rec("2026-11-13T10:00:00+00:00", job="lesson", cost=0.015))
     assert cli.main(["stats"]) == 0
     out = capsys.readouterr().out

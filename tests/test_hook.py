@@ -12,7 +12,12 @@ from tutor_agent import hook
 
 
 def stop(path, **extra):
-    return {"hook_event_name": "Stop", "session_id": t.SESSION, "transcript_path": str(path), **extra}
+    return {
+        "hook_event_name": "Stop",
+        "session_id": t.SESSION,
+        "transcript_path": str(path),
+        **extra,
+    }
 
 
 def test_stop_reads_main_transcript():
@@ -46,7 +51,10 @@ def run_hook(payload: dict, env: dict | None = None) -> tuple[subprocess.Complet
     start = time.perf_counter()
     proc = subprocess.run(
         [sys.executable, "-m", "tutor_agent.cli", "hook"],
-        input=json.dumps(payload), capture_output=True, text=True, env={**os.environ, **(env or {})},
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+        env={**os.environ, **(env or {})},
     )
     return proc, time.perf_counter() - start
 

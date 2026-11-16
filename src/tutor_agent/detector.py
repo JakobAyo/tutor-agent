@@ -43,7 +43,14 @@ SCHEMA = {
                     "event_index": {"type": "integer"},
                     "reuses_known": {"type": "boolean"},
                 },
-                "required": ["name", "category", "summary", "why_here", "event_index", "reuses_known"],
+                "required": [
+                    "name",
+                    "category",
+                    "summary",
+                    "why_here",
+                    "event_index",
+                    "reuses_known",
+                ],
             },
         }
     },
@@ -107,7 +114,10 @@ def snippet(event: Event) -> str:
     lines = event.content.splitlines()
     if len(lines) <= SNIPPET_LINES:
         return event.content
-    return "\n".join(lines[:SNIPPET_LINES]) + f"\n[... {len(lines) - SNIPPET_LINES} more lines cut ...]"
+    return (
+        "\n".join(lines[:SNIPPET_LINES])
+        + f"\n[... {len(lines) - SNIPPET_LINES} more lines cut ...]"
+    )
 
 
 def parse(structured, events: list[Event]) -> list[Candidate]:

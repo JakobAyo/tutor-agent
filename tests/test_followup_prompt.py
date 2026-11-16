@@ -15,7 +15,10 @@ from tutor_agent.lessons import Lesson
 from tutor_agent.settings import Settings
 from tutor_agent.store import Concept, Source, Status
 
-pytestmark = [pytest.mark.prompt, pytest.mark.skipif(shutil.which("claude") is None, reason="claude not installed")]
+pytestmark = [
+    pytest.mark.prompt,
+    pytest.mark.skipif(shutil.which("claude") is None, reason="claude not installed"),
+]
 
 
 def session_files() -> set[Path]:
@@ -24,21 +27,49 @@ def session_files() -> set[Path]:
 
 def test_follow_up_refers_to_the_lesson_and_builds_on_known_concepts():
     event = batches.load("supervisor-loop")[3]  # the edit of supervisor.py
-    source = Source(snippet=detector.snippet(event), project="~/Projects/project-d", file=event.file,
-                    context="The agent wrote a loop that restarts the harness and rolls back to the "
-                            "last good commit when the new one fails.")
-    concept = Concept(id="supervisor-with-last-known-good-rollback", name="Supervisor with last-known-good rollback",
-                      category="Design patterns", status=Status.SEEN, sources=[source],
-                      summary="A parent process restarts a child and falls back to the last version that worked.")
-    lesson = Lesson(concept.id, "## What the agent did\nThe supervisor runs harness.py in a loop and resets "
-                    "to the last good commit when a run fails.\n\n## Why it did it\nSo a broken self-edit "
-                    "can't stop the loop.", "sonnet", "t", source)
-    known = [Concept(id="process-groups", name="Process groups", category="Language mechanisms",
-                     status=Status.UNDERSTOOD, summary="Signal a whole tree of processes at once via its group id.")]
+    source = Source(
+        snippet=detector.snippet(event),
+        project="~/Projects/project-d",
+        file=event.file,
+        context="The agent wrote a loop that restarts the harness and rolls back to the "
+        "last good commit when the new one fails.",
+    )
+    concept = Concept(
+        id="supervisor-with-last-known-good-rollback",
+        name="Supervisor with last-known-good rollback",
+        category="Design patterns",
+        status=Status.SEEN,
+        sources=[source],
+        summary="A parent process restarts a child and falls back to the last version that worked.",
+    )
+    lesson = Lesson(
+        concept.id,
+        "## What the agent did\nThe supervisor runs harness.py in a loop and resets "
+        "to the last good commit when a run fails.\n\n## Why it did it\nSo a broken self-edit "
+        "can't stop the loop.",
+        "sonnet",
+        "t",
+        source,
+    )
+    known = [
+        Concept(
+            id="process-groups",
+            name="Process groups",
+            category="Language mechanisms",
+            status=Status.UNDERSTOOD,
+            summary="Signal a whole tree of processes at once via its group id.",
+        )
+    ]
 
     before = session_files()
-    answer = followups.answer(concept, lesson, [], known,
-                              "How does the supervisor make sure a hanging harness run gets stopped?", Settings())
+    answer = followups.answer(
+        concept,
+        lesson,
+        [],
+        known,
+        "How does the supervisor make sure a hanging harness run gets stopped?",
+        Settings(),
+    )
     assert session_files() == before, "the follow-up created a Claude Code session"
 
     assert "supervisor" in answer.lower() or "harness" in answer.lower(), answer
@@ -48,7 +79,9 @@ def test_follow_up_refers_to_the_lesson_and_builds_on_known_concepts():
 
 def test_explanation_of_a_real_turn_has_the_structure():
     events = batches.load("supervisor-loop")
-    turn = explain.LatestTurn(explain.Session("fixture", Path("fixture.jsonl"), 0, "~/Projects/project-d"), events)
+    turn = explain.LatestTurn(
+        explain.Session("fixture", Path("fixture.jsonl"), 0, "~/Projects/project-d"), events
+    )
     text = explain.explain(turn, [], Settings())
 
     sections = ("## What happened", "## Why it did it this way", "## Concepts behind it")

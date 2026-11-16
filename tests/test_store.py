@@ -8,18 +8,26 @@ from tutor_agent.store import ConceptStore, Entry, Outcome, Source, Status, Stor
 
 
 def src(text="x = 1", context="the agent did a thing"):
-    return Source(snippet=text, context=context, project="~/p", session_id="s1", transcript_ref="t.jsonl:3")
+    return Source(
+        snippet=text, context=context, project="~/p", session_id="s1", transcript_ref="t.jsonl:3"
+    )
 
 
 def test_concept_id_normalizes_names():
-    assert concept_id("Dependency Injection") == concept_id("dependency-injection") == "dependency-injection"
+    assert (
+        concept_id("Dependency Injection")
+        == concept_id("dependency-injection")
+        == "dependency-injection"
+    )
     with pytest.raises(ValueError):
         concept_id("  !! ")
 
 
 def test_add_and_reload():
     store = ConceptStore()
-    concept, outcome = store.add("Atomic file writes", "mechanism", "Write to temp, then rename.", src())
+    concept, outcome = store.add(
+        "Atomic file writes", "mechanism", "Write to temp, then rename.", src()
+    )
     assert outcome is Outcome.CREATED and concept.status is Status.NEW
     loaded = ConceptStore().get("atomic-file-writes")
     assert loaded == concept
@@ -48,7 +56,9 @@ def test_dismissed_concept_gets_no_new_source():
 def test_record_stores_a_batch_in_one_write():
     store = ConceptStore()
     store.add("Known", "pattern", "s", src("a"))
-    results = store.record([Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))])
+    results = store.record(
+        [Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))]
+    )
     assert [o for _, o in results] == [Outcome.CREATED, Outcome.ATTACHED]
     assert len(store.get("known").sources) == 2
 
@@ -108,7 +118,9 @@ def _writer(data_dir: str, worker: int, n: int) -> None:
 def test_parallel_writers_lose_nothing(data_dir):
     workers, per_worker = 8, 25
     ctx = mp.get_context("spawn")  # fresh interpreters, like separate detector processes
-    procs = [ctx.Process(target=_writer, args=(str(data_dir), w, per_worker)) for w in range(workers)]
+    procs = [
+        ctx.Process(target=_writer, args=(str(data_dir), w, per_worker)) for w in range(workers)
+    ]
     for p in procs:
         p.start()
     for p in procs:

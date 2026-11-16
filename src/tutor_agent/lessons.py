@@ -125,7 +125,13 @@ def generate(concept: Concept, settings: Settings) -> Lesson:
     text = result.text.strip()
     if not text:
         raise LessonError("the model returned an empty lesson")
-    return Lesson(concept_id=concept.id, text=text, model=settings.lesson_model, generated_at=now(), source=source)
+    return Lesson(
+        concept_id=concept.id,
+        text=text,
+        model=settings.lesson_model,
+        generated_at=now(),
+        source=source,
+    )
 
 
 class LessonCache:

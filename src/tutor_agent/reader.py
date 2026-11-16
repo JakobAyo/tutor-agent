@@ -96,7 +96,12 @@ def _read_from(transcript: Path, session_id: str, pos: dict) -> tuple[Batch, dic
     if skipped:
         log.warning("%s: skipped %d invalid JSON lines", transcript, skipped)
     if dropped:
-        log.info("%s: batch too large, kept the newest %d of %d events", transcript, MAX_EVENTS, len(events))
+        log.info(
+            "%s: batch too large, kept the newest %d of %d events",
+            transcript,
+            MAX_EVENTS,
+            len(events),
+        )
     batch = Batch(transcript, session_id, first_line, line, events[dropped:], skipped, dropped)
     return batch, {"byte": byte, "line": line}
 

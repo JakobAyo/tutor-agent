@@ -17,8 +17,19 @@ from tutor_agent.store import now
 
 
 def record(job: str, model: str, duration_ms: int, cost_usd: float | None, *, ok: bool) -> None:
-    line = json.dumps({"at": now(), "job": job, "model": model, "ms": duration_ms,
-                       "cost_usd": cost_usd, "ok": ok}) + "\n"
+    line = (
+        json.dumps(
+            {
+                "at": now(),
+                "job": job,
+                "model": model,
+                "ms": duration_ms,
+                "cost_usd": cost_usd,
+                "ok": ok,
+            }
+        )
+        + "\n"
+    )
     try:
         fd = os.open(paths.usage_file(), os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
         try:

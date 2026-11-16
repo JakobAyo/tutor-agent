@@ -28,7 +28,10 @@ def notify(concepts: list[Concept], *, muted: bool, notify_bin: str = "notify-se
     try:
         subprocess.run(
             [notify_bin, f"--app-name={APP_NAME}", "--", title, body],
-            stdin=subprocess.DEVNULL, capture_output=True, timeout=TIMEOUT_S, check=True,
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            timeout=TIMEOUT_S,
+            check=True,
         )
     except (OSError, subprocess.SubprocessError) as e:
         log.warning("notification failed (%s): %s", notify_bin, e)

@@ -13,19 +13,29 @@ from tutor_agent.tui import SessionPicker, TutorApp
 
 def seed(*names: str) -> ConceptStore:
     store = ConceptStore()
-    store.record([Entry(n, "Design patterns", f"About {n}.",
-                        Source(snippet=f"code for {n}", context="ctx", project="/home/me/Projects/api"))
-                  for n in names])
+    store.record(
+        [
+            Entry(
+                n,
+                "Design patterns",
+                f"About {n}.",
+                Source(snippet=f"code for {n}", context="ctx", project="/home/me/Projects/api"),
+            )
+            for n in names
+        ]
+    )
     return store
 
 
 def run(test, store=None, size=(120, 40)):
     """Run `test(pilot, app)` inside a headless app."""
+
     async def main():
         app = TutorApp(store=store or ConceptStore(), cfg=Settings(), poll_s=0.05)
         async with app.run_test(size=size) as pilot:
             await pilot.pause()
             await test(pilot, app)
+
     asyncio.run(main())
 
 
@@ -46,6 +56,7 @@ async def settle(pilot, app):
 def test_empty_memory():
     async def t(pilot, app):
         assert "No concepts yet" in shown(app)
+
     run(t)
 
 
@@ -59,6 +70,7 @@ def test_list_is_grouped_new_first_and_hides_dismissed():
         assert options(app) == ["NEW (1)", "Alpha", "SEEN (1)", "Delta", "UNDERSTOOD (1)", "Beta"]
         await pilot.press("h")
         assert options(app)[-2:] == ["DISMISSED (1)", "Gamma"]
+
     run(t, store)
 
 
@@ -69,6 +81,7 @@ def test_highlight_shows_card_without_a_call(fake_claude):
         assert "About Alpha." in shown(app) and "Enter" in shown(app)
         assert fake_claude.calls == 0
         assert store.get("alpha").status is Status.NEW
+
     run(t, store)
 
 
@@ -92,6 +105,7 @@ def test_open_marks_seen_generates_once_and_reopens_from_cache(fake_claude):
         await settle(pilot, app)
         assert fake_claude.calls == 1  # reopened from the cache, no LLM call
         assert "echo: CONCEPT:" in shown(app)
+
     run(t, store)
 
 
@@ -104,6 +118,7 @@ def test_regenerate_makes_a_new_call(fake_claude):
         await pilot.press("r")
         await settle(pilot, app)
         assert fake_claude.calls == 2
+
     run(t, store)
 
 
@@ -116,6 +131,7 @@ def test_failed_lesson_is_shown_and_nothing_cached(fake_claude):
         await settle(pilot, app)
         assert "Lesson failed" in shown(app)
         assert lessons.LessonCache().get("alpha") is None
+
     run(t, store)
 
 
@@ -137,6 +153,7 @@ def test_status_keys_follow_the_learner_model():
             await pilot.press("down")
         await pilot.press("n")
         assert store.get("alpha").status is Status.NEW
+
     run(t, store)
 
 
@@ -149,7 +166,12 @@ def test_pane_picks_up_detector_writes():
             await pilot.pause(0.05)
             if "Beta" in options(app):
                 break
-        assert options(app)[:3] == ["NEW (2)", "Alpha", "Beta"] or options(app)[:3] == ["NEW (2)", "Beta", "Alpha"]
+        assert options(app)[:3] == ["NEW (2)", "Alpha", "Beta"] or options(app)[:3] == [
+            "NEW (2)",
+            "Beta",
+            "Alpha",
+        ]
+
     run(t, store)
 
 
@@ -166,10 +188,12 @@ def test_pane_stays_responsive_while_generating(fake_claude):
         await pilot.press("u")
         assert sum(c.status is Status.UNDERSTOOD for c in store.list()) == 1
         await settle(pilot, app)
+
     run(t, store)
 
 
 # --- follow-ups (M5) ---------------------------------------------------------------------------
+
 
 async def open_lesson(pilot, app):
     await pilot.press("enter")
@@ -200,13 +224,16 @@ def test_follow_up_thread_builds_on_the_lesson_and_known_concepts(fake_claude):
         assert "**You:** why this" in shown(app) and "## Follow-ups" in shown(app)
 
         await ask(pilot, app, "and then")
-        assert "Q: why this\nA: echo: CONCEPT: Alpha" in fake_claude.record["stdin"]  # the thread so far
+        assert (
+            "Q: why this\nA: echo: CONCEPT: Alpha" in fake_claude.record["stdin"]
+        )  # the thread so far
         assert shown(app).count("**You:**") == 2
 
         app.highlight("beta")
         assert "**You:**" not in shown(app)  # threads are per lesson
         app.highlight("alpha")
         assert shown(app).count("**You:**") == 2
+
     run(t, store)
 
 
@@ -220,6 +247,7 @@ def test_follow_up_keys_type_into_the_input_not_the_status_keys(fake_claude):
         assert fake_claude.record["stdin"].endswith("QUESTION:\nuds")
         await pilot.press("escape")
         assert app.focused is app.query_one(OptionList)
+
     run(t, store)
 
 
@@ -230,6 +258,7 @@ def test_follow_up_needs_an_open_lesson(fake_claude):
         await ask(pilot, app, "why")
         assert fake_claude.calls == 0
         assert "**You:**" not in shown(app)
+
     run(t, store)
 
 
@@ -242,15 +271,20 @@ def test_failed_follow_up_keeps_the_question(fake_claude):
         await ask(pilot, app, "why")
         assert "**You:**" not in shown(app)
         assert app.query_one("#ask", Input).value == "why"
+
     run(t, store)
 
 
 # --- what just happened (M5) -------------------------------------------------------------------
 
+
 def write_session():
     from tutor_agent import paths
-    return transcripts.write(paths.claude_projects_dir() / "-home-u-proj" / f"{transcripts.SESSION}.jsonl",
-                             transcripts.turn(0) + transcripts.turn(1))
+
+    return transcripts.write(
+        paths.claude_projects_dir() / "-home-u-proj" / f"{transcripts.SESSION}.jsonl",
+        transcripts.turn(0) + transcripts.turn(1),
+    )
 
 
 def test_what_just_happened_explains_the_picked_session(fake_claude):
@@ -277,6 +311,7 @@ def test_what_just_happened_explains_the_picked_session(fake_claude):
         await pilot.press("x")
         assert "echo: PROJECT:" in shown(app)
         assert fake_claude.calls == 1
+
     run(t, store)
 
 
@@ -290,6 +325,7 @@ def test_session_picker_can_be_cancelled(fake_claude):
         await pilot.pause()
         assert not isinstance(app.screen, SessionPicker)
         assert fake_claude.calls == 0
+
     run(t, seed("Alpha"))
 
 
@@ -298,4 +334,5 @@ def test_what_just_happened_without_sessions(fake_claude):
         await pilot.press("w")
         await pilot.pause()
         assert not isinstance(app.screen, SessionPicker)
+
     run(t)

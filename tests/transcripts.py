@@ -43,7 +43,10 @@ def tool_use(tid: str, name: str, **inp) -> dict:
 def tool_result(tid: str, content: str, **kw) -> dict:
     return _base(
         "user",
-        message={"role": "user", "content": [{"type": "tool_result", "tool_use_id": tid, "content": content}]},
+        message={
+            "role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": tid, "content": content}],
+        },
         toolUseResult={"stdout": content},
         **kw,
     )
@@ -59,7 +62,12 @@ def turn(n: int = 0, **kw) -> list[dict]:
         prompt(f"add caching #{n}", **kw),
         other(),
         assistant(thinking(""), text("I'll use an LRU cache."), **kw),
-        assistant(tool_use(f"e{n}", "Edit", file_path="/home/u/proj/a.py", old_string="x", new_string="y"), **kw),
+        assistant(
+            tool_use(
+                f"e{n}", "Edit", file_path="/home/u/proj/a.py", old_string="x", new_string="y"
+            ),
+            **kw,
+        ),
         tool_result(f"e{n}", "ok", **kw),
         assistant(tool_use(f"b{n}", "Bash", command="pytest -q"), **kw),
         tool_result(f"b{n}", "3 passed", **kw),
