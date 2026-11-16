@@ -15,7 +15,7 @@ Decided in [0005](../decisions/0005-global-concept-memory.md): one **global conc
 ## Updates
 - The detector only **adds** concepts. It never changes the status of an existing one.
 - When a known concept shows up again, the detector adds the new source reference to it but sends no notification. Dismissed concepts get no new sources.
-- The tutor pane hides dismissed concepts by default.
+- The tutor pane shows each status in its own tab and opens on `new`. Dismissed concepts appear only in the Dismissed and All tabs ([0035](../decisions/0035-tui-tabs-filters-vim-keys.md)).
 - Gaps = everything in `new` + `seen`. Progress = the number of concepts in `understood` over time.
 
 Storage details: [data storage](../architecture/data-storage.md).

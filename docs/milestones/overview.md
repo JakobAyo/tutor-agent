@@ -30,6 +30,7 @@ flowchart LR
 | F8 (explain what just happened) | M5 |
 | F9 (follow-ups) | M5 |
 | F10 (dismiss) | M4 (pane), M3 (detector respects it) |
+| F11 (search, filters, vim keys) | M6 |
 | Non-functional: non-blocking hook, robustness | M2 |
 | Non-functional: no side effects, no self-observation, secrets | M1 |
 | Non-functional: concurrency | M1 (store), M2 (offsets) |

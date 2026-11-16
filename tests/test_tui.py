@@ -3,12 +3,12 @@
 import asyncio
 
 import transcripts
-from textual.widgets import Input, Markdown, OptionList
+from textual.widgets import Input, Markdown, OptionList, Tab
 
 from tutor_agent import lessons
 from tutor_agent.settings import Settings
 from tutor_agent.store import Concept, ConceptStore, Entry, Source, Status
-from tutor_agent.tui import SessionPicker, TutorApp
+from tutor_agent.tui import ChoicePicker, HelpScreen, SessionPicker, TutorApp
 
 
 def get(store: ConceptStore, cid: str) -> Concept:
@@ -46,8 +46,15 @@ def run(test, store=None, size=(120, 40)):
 
 
 def options(app) -> list[str]:
-    ol = app.query_one(OptionList)
-    return [str(ol.get_option_at_index(i).prompt).split("\n")[0] for i in range(ol.option_count)]
+    """Concept names in the list, without the status icon."""
+    ol = app.concept_list
+    return [
+        str(ol.get_option_at_index(i).prompt).split("\n")[0][2:] for i in range(ol.option_count)
+    ]
+
+
+def tab_labels(app) -> list[str]:
+    return [str(tab.label) for tab in app.query(Tab)]
 
 
 def shown(app) -> str:
@@ -67,16 +74,27 @@ def test_empty_memory():
     run(t)
 
 
-def test_list_is_grouped_new_first_and_hides_dismissed():
+def test_tabs_list_one_status_each_with_counts():
     store = seed("Alpha", "Beta", "Gamma", "Delta")
     store.set_status("beta", Status.UNDERSTOOD)
     store.set_status("gamma", Status.DISMISSED)
     store.set_status("delta", Status.SEEN)
 
     async def t(pilot, app):
-        assert options(app) == ["NEW (1)", "Alpha", "SEEN (1)", "Delta", "UNDERSTOOD (1)", "Beta"]
-        await pilot.press("h")
-        assert options(app)[-2:] == ["DISMISSED (1)", "Gamma"]
+        assert options(app) == ["Alpha"]  # opens on New
+        assert tab_labels(app) == ["New 1", "Seen 1", "Understood 1", "Dismissed 1", "All 4"]
+        await pilot.press("2")
+        assert options(app) == ["Delta"]
+        await pilot.press("right_square_bracket")
+        assert options(app) == ["Beta"]
+        await pilot.press("right_square_bracket")
+        assert options(app) == ["Gamma"]
+        await pilot.press("5")
+        assert sorted(options(app)) == ["Alpha", "Beta", "Delta", "Gamma"]
+        await pilot.press("right_square_bracket")  # wraps around to New
+        assert options(app) == ["Alpha"]
+        await pilot.press("left_square_bracket")
+        assert app.tab is None
 
     run(t, store)
 
@@ -150,16 +168,31 @@ def test_status_keys_follow_the_learner_model():
         assert get(store, "alpha").status is Status.NEW
         await pilot.press("u")
         assert get(store, "alpha").status is Status.UNDERSTOOD
-        await pilot.press("s")
+        assert options(app) == []  # it left the New tab
+        await pilot.press("3", "s")
         assert get(store, "alpha").status is Status.SEEN
-        await pilot.press("d")
+        await pilot.press("2", "d")
         assert get(store, "alpha").status is Status.DISMISSED
-        assert "Alpha" not in options(app)  # hidden by default
-        await pilot.press("h")
-        while app.highlighted_id() != "alpha":
-            await pilot.press("down")
-        await pilot.press("n")
+        assert "Alpha" not in options(app)  # only in the Dismissed and All tabs
+        await pilot.press("4", "n")
         assert get(store, "alpha").status is Status.NEW
+
+    run(t, store)
+
+
+def test_undo_restores_the_last_status_change():
+    store = seed("Alpha", "Beta")
+
+    async def t(pilot, app):
+        await pilot.press("z")  # nothing to undo yet
+        first = app.highlighted_id()
+        await pilot.press("d")
+        assert len(options(app)) == 1
+        await pilot.press("z")
+        assert get(store, first).status is Status.NEW
+        assert app.highlighted_id() == first  # back in the list and highlighted
+        await pilot.press("z")  # only one level
+        assert get(store, first).status is Status.NEW
 
     run(t, store)
 
@@ -173,11 +206,8 @@ def test_pane_picks_up_detector_writes():
             await pilot.pause(0.05)
             if "Beta" in options(app):
                 break
-        assert options(app)[:3] == ["NEW (2)", "Alpha", "Beta"] or options(app)[:3] == [
-            "NEW (2)",
-            "Beta",
-            "Alpha",
-        ]
+        assert sorted(options(app)) == ["Alpha", "Beta"]
+        assert tab_labels(app)[0] == "New 2"
 
     run(t, store)
 
@@ -220,6 +250,7 @@ def test_follow_up_thread_builds_on_the_lesson_and_known_concepts(fake_claude):
     store.set_status("beta", Status.UNDERSTOOD)
 
     async def t(pilot, app):
+        await pilot.press("5")  # All: Beta is understood
         app.highlight("alpha")
         await open_lesson(pilot, app)
         await ask(pilot, app, "why this")
@@ -343,3 +374,179 @@ def test_what_just_happened_without_sessions(fake_claude):
         assert not isinstance(app.screen, SessionPicker)
 
     run(t)
+
+
+# --- tabs, search, filters, vim keys (ADR 0035) -------------------------------------------------
+
+
+def seed_mixed() -> ConceptStore:
+    store = ConceptStore()
+    store.record(
+        [
+            Entry(name, category, summary, Source(snippet="x", context="c", project=project))
+            for name, category, summary, project in [
+                ("File locking", "Mechanisms", "Advisory flock on a lock file.", "/p/api"),
+                ("Dependency injection", "Design patterns", "Pass collaborators in.", "/p/web"),
+                ("Worker threads", "Mechanisms", "Keep the UI responsive.", "/p/web"),
+            ]
+        ]
+    )
+    return store
+
+
+async def type_text(pilot, text):
+    for ch in text:
+        await pilot.press("space" if ch == " " else ch)
+
+
+def test_search_narrows_as_you_type_and_esc_clears():
+    async def t(pilot, app):
+        await pilot.press("slash")
+        assert app.focused is app.search_input
+        await type_text(pilot, "flk")  # fuzzy: f…l…k in "File locking"
+        assert options(app) == ["File locking"]
+        assert "/ flk" in str(app.chips.render())
+        await pilot.press("enter")  # keeps the filter, back to the list
+        assert app.focused is app.concept_list and options(app) == ["File locking"]
+        await pilot.press("slash")
+        await pilot.press("escape")  # clears the search
+        assert len(options(app)) == 3 and not app.search_input.display
+
+        await pilot.press("slash")
+        await type_text(pilot, "responsive")  # summary match
+        assert options(app) == ["Worker threads"]
+        await pilot.press("enter", "escape")  # Esc on the list clears every filter
+        assert len(options(app)) == 3 and not app.filters.active
+
+    run(t, seed_mixed())
+
+
+def test_search_with_no_match_says_so():
+    async def t(pilot, app):
+        await pilot.press("slash")
+        await type_text(pilot, "zzz")
+        assert options(app) == []
+        assert "match the filters" in shown(app)
+        assert tab_labels(app)[0] == "New 0"
+
+    run(t, seed_mixed())
+
+
+def test_project_and_category_pickers_filter_the_list():
+    async def t(pilot, app):
+        await pilot.press("p")
+        await pilot.pause()
+        assert isinstance(app.screen, ChoicePicker)
+        await pilot.press("j", "j", "enter")  # any, api, web -> web
+        await pilot.pause()
+        assert sorted(options(app)) == ["Dependency injection", "Worker threads"]
+        await pilot.press("c")
+        await pilot.pause()
+        await pilot.press("j", "j", "enter")  # any, Design patterns, Mechanisms
+        await pilot.pause()
+        assert options(app) == ["Worker threads"]
+        chips = str(app.chips.render())
+        assert "project: web" in chips and "category: Mechanisms" in chips
+
+        await pilot.press("c")
+        await pilot.pause()
+        await pilot.press("escape")  # cancel keeps the filter
+        await pilot.pause()
+        assert options(app) == ["Worker threads"]
+        await pilot.press("c")
+        await pilot.pause()
+        await pilot.press("g", "enter")  # "any" drops it
+        await pilot.pause()
+        assert len(options(app)) == 2
+
+    run(t, seed_mixed())
+
+
+def test_sort_cycles():
+    async def t(pilot, app):
+        await pilot.press("o", "o", "o")  # newest -> oldest -> most seen -> A-Z
+        assert options(app) == ["Dependency injection", "File locking", "Worker threads"]
+        assert app.chips.display
+        await pilot.press("o")  # back to newest, so no filter line
+        assert not app.chips.display
+
+    run(t, seed_mixed())
+
+
+def test_vim_motions_move_the_list_and_focus():
+    async def t(pilot, app):
+        await pilot.press("o", "o", "o")  # A-Z for a known order
+        await pilot.press("j")
+        assert app.highlighted_id() == "file-locking"
+        await pilot.press("G")
+        assert app.highlighted_id() == "worker-threads"
+        await pilot.press("k", "g")
+        assert app.highlighted_id() == "dependency-injection"
+        await pilot.press("l")
+        assert app.focused is app.lesson_pane
+        await pilot.press("j", "ctrl+d", "ctrl+u")  # scroll the lesson; the list stays put
+        assert app.highlighted_id() == "dependency-injection"
+        await pilot.press("h")
+        assert app.focused is app.concept_list
+
+    run(t, seed_mixed(), size=(120, 12))
+
+
+def test_full_width_lesson_toggles_the_list():
+    async def t(pilot, app):
+        await pilot.press("m")
+        assert not app.sidebar.display and app.focused is app.lesson_pane
+        await pilot.press("m")
+        assert app.sidebar.display and app.focused is app.concept_list
+        await pilot.press("m", "h")  # focusing the list brings it back too
+        assert app.sidebar.display
+
+    run(t, seed_mixed())
+
+
+def test_help_overlay_opens_and_closes():
+    async def t(pilot, app):
+        await pilot.press("question_mark")
+        await pilot.pause()
+        assert isinstance(app.screen, HelpScreen)
+        await pilot.press("q")  # closes the overlay, doesn't quit
+        await pilot.pause()
+        assert app.is_running
+        assert not isinstance(app.screen, HelpScreen)
+
+    run(t, seed_mixed())
+
+
+def test_opened_concept_stays_in_new_until_the_tab_changes(fake_claude):
+    store = seed("Alpha", "Beta")
+
+    async def t(pilot, app):
+        first = app.highlighted_id()
+        await open_lesson(pilot, app)
+        assert get(store, first).status is Status.SEEN
+        assert len(options(app)) == 2 and app.highlighted_id() == first  # no jump
+        assert tab_labels(app)[:2] == ["New 1", "Seen 1"]
+        await pilot.press("2", "1")
+        assert len(options(app)) == 1
+
+    run(t, store)
+
+
+def test_empty_tab_says_how_to_move_on():
+    async def t(pilot, app):
+        await pilot.press("3")
+        assert "No understood concepts" in shown(app)
+
+    run(t, seed("Alpha"))
+
+
+def test_clicking_a_tab_switches_to_it():
+    store = seed("Alpha")
+    store.set_status("alpha", Status.SEEN)
+
+    async def t(pilot, app):
+        await pilot.click("#tab-seen")
+        await pilot.pause()
+        assert app.tab is Status.SEEN and options(app) == ["Alpha"]
+
+    run(t, store)

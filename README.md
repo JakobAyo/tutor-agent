@@ -88,9 +88,18 @@ Then open `tutor tui` in a terminal pane next to your agent. Remove the hook wit
 | `tutor stats [--days N]` | Concept memory size and model usage per day (no call). |
 | `tutor detect <transcript.jsonl> --dry-run` | Log the next batch without detecting, for debugging. |
 
-**Keys in the tutor pane:** <kbd>Enter</kbd> open lesson · <kbd>f</kbd> follow-up ·
-<kbd>w</kbd> what just happened · <kbd>u</kbd> understood · <kbd>s</kbd> back to seen ·
-<kbd>d</kbd> dismiss · <kbd>n</kbd> undo dismiss · <kbd>r</kbd> regenerate · <kbd>h</kbd> show dismissed
+**Keys in the tutor pane** (<kbd>?</kbd> shows them all):
+
+- **Move:** <kbd>j</kbd>/<kbd>k</kbd> up/down · <kbd>g</kbd>/<kbd>G</kbd> top/bottom ·
+  <kbd>h</kbd>/<kbd>l</kbd> list/lesson · <kbd>Ctrl-d</kbd>/<kbd>Ctrl-u</kbd> scroll lesson ·
+  <kbd>1</kbd>–<kbd>5</kbd> or <kbd>[</kbd>/<kbd>]</kbd> switch tab (New, Seen, Understood, Dismissed, All) ·
+  <kbd>m</kbd> full-width lesson
+- **Find:** <kbd>/</kbd> search · <kbd>p</kbd> project · <kbd>c</kbd> category · <kbd>o</kbd> sort ·
+  <kbd>Esc</kbd> clear filters
+- **Learn:** <kbd>Enter</kbd> open lesson · <kbd>f</kbd> follow-up · <kbd>w</kbd> what just happened ·
+  <kbd>x</kbd> last explanation · <kbd>r</kbd> regenerate
+- **Status:** <kbd>u</kbd> understood · <kbd>s</kbd> back to seen · <kbd>d</kbd> dismiss ·
+  <kbd>n</kbd> undo dismiss · <kbd>z</kbd> undo last change
 
 Settings (models, timeouts, mute) live in `~/.local/share/tutor-agent/settings.toml`.
 

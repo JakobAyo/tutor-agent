@@ -59,3 +59,10 @@ Other observations from day one:
 - All 19 concepts come from tutor-agent sessions, so the self-observation bias from the first entry still holds.
 
 Still to check: duplicates after the lock is in place; the existing two pairs can be dismissed by hand.
+
+### 2026-11-16: the concept list got messy (round 3)
+With a few days of concepts, the single grouped list stopped working: read concepts pile up under the new ones, there is no way to narrow it to one project or category, and finding a concept means scrolling with the arrow keys.
+
+Planned fix ([0035](../decisions/0035-tui-tabs-filters-vim-keys.md)): status tabs with counts, `/` search, project and category filters, sort options, a filter chips line, vim motions, a full-width lesson toggle, and a `?` help overlay.
+
+Still to check after it ships: whether `New` works as an inbox in daily use, and whether the README screenshot is regenerated.
