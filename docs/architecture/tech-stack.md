@@ -19,5 +19,6 @@
 | Tests | pytest + pytest-cov (90% branch-coverage floor). A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1, [0033](../decisions/0033-ci-cd-and-release-automation.md) |
 | Code quality | ruff (lint + format), mypy `--strict` on `src/`, pre-commit hooks | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
 | CI/CD | GitHub Actions: `ci.yml` (gates on PRs), `develop.yml` (TestPyPI `.devN`), `release.yml` (release-please → PyPI), CodeQL, Dependabot | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
+| Secrets & privacy | GitHub secret scanning + push protection, gitleaks (CI over full history + pre-commit), `scripts/check_private_data.py` (home paths, project slugs, emails, private terms) | [0034](../decisions/0034-secret-and-private-data-scanning.md) |
 | Versioning | SemVer from Conventional Commits via release-please; it owns `CHANGELOG.md` and the version | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
 | License | MIT | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
