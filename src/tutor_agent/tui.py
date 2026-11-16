@@ -1,9 +1,11 @@
-"""The tutor pane (ADR 0009, 0028). Only `tutor tui` imports this module: Textual is a heavy import.
+"""The tutor pane (ADR 0009, 0028, 0035). Only `tutor tui` imports this module: Textual is heavy.
 
-Left: the concept list, grouped by status. Right: the highlighted concept's cached lesson, or a
-short card. Enter opens a lesson (marks it `seen`, generates it on first open). Under it, an
-input for follow-up questions (ADR 0012, 0029); the thread lives per concept while the pane is
-open. `w` picks a recent session and explains its latest turn ("what just happened", F8).
+Left: status tabs (New, Seen, Understood, Dismissed, All), an optional filter line and search
+line, and the concept list. What the list shows (tab, search, project, category, sort) comes from
+`browse.py`. Right: the highlighted concept's cached lesson, or a short card. Enter opens a lesson
+(marks it `seen`, generates it on first open). Under it, an input for follow-up questions (ADR
+0012, 0029); the thread lives per concept while the pane is open. `w` picks a recent session and
+explains its latest turn ("what just happened", F8). Vim motions move around; `?` lists every key.
 Every model call runs in a worker thread, so the pane never freezes. The concept memory is
 polled once a second, so concepts the detector adds show up without a restart.
 """
@@ -11,6 +13,7 @@ polled once a second, so concepts the detector adds show up without a restart.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import replace
 from typing import ClassVar
 
 from rich.text import Text
@@ -19,14 +22,13 @@ from textual.app import App, ComposeResult
 from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
-from textual.widgets import Footer, Header, Input, Markdown, OptionList
+from textual.widgets import Footer, Header, Input, Markdown, OptionList, Static, Tab, Tabs
 from textual.widgets.option_list import Option, OptionDoesNotExist
 
-from tutor_agent import explain, followups, lessons, paths, settings
+from tutor_agent import browse, explain, followups, lessons, paths, settings
+from tutor_agent.browse import Filters, project_name
 from tutor_agent.log import get_logger
 from tutor_agent.store import Concept, ConceptStore, Status, StoreError
-
-GROUPS = (Status.NEW, Status.SEEN, Status.UNDERSTOOD, Status.DISMISSED)
 
 # Which status keys apply to which current status (learner model, ADR 0018).
 TRANSITIONS: dict[Status, set[Status]] = {
@@ -36,24 +38,45 @@ TRANSITIONS: dict[Status, set[Status]] = {
     Status.NEW: {Status.DISMISSED},  # undo a dismissal
 }
 
+HELP = """\
+# Keys
 
-def project_name(concept: Concept) -> str:
-    project = concept.sources[-1].project if concept.sources else None
-    return project.rstrip("/").rsplit("/", 1)[-1] if project else "?"
+## Move
+| Key | |
+|---|---|
+| `j` / `k` | down / up (list or lesson) |
+| `g` / `G` | top / bottom |
+| `h` / `l` | focus the list / the lesson |
+| `Ctrl-d` / `Ctrl-u` | scroll the lesson half a page |
+| `1`–`5`, `[` / `]` | tab: New, Seen, Understood, Dismissed, All |
+| `m` | full-width lesson (again to bring the list back) |
 
+## Find
+| Key | |
+|---|---|
+| `/` | search names and summaries (Enter keeps it, Esc clears it) |
+| `p` / `c` | filter by project / category |
+| `o` | next sort order: newest, oldest, most seen, A–Z |
+| `Esc` | on the list: clear all filters |
 
-def ordered(concepts: list[Concept], show_dismissed: bool) -> list[tuple[Status, list[Concept]]]:
-    """Concepts grouped by status (`new` first), newest first inside a group."""
-    out = []
-    for status in GROUPS:
-        if status is Status.DISMISSED and not show_dismissed:
-            continue
-        group = sorted(
-            (c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True
-        )
-        if group:
-            out.append((status, group))
-    return out
+## Learn
+| Key | |
+|---|---|
+| `Enter` | open the lesson (marks it seen) |
+| `f` | ask a follow-up about the open lesson |
+| `r` | regenerate the lesson |
+| `w` / `x` | explain what just happened in a session / show it again |
+
+## Status
+| Key | |
+|---|---|
+| `u` | understood |
+| `s` | back to seen |
+| `d` / `n` | dismiss / undo a dismissal |
+| `z` | undo the last status change |
+
+`q` quits. `Esc` or `?` closes this.
+"""  # noqa: RUF001  # the en dashes are intended
 
 
 def card(concept: Concept) -> str:
@@ -72,6 +95,14 @@ def card(concept: Concept) -> str:
     return "\n".join(lines)
 
 
+def row(concept: Concept) -> Text:
+    label = Text()  # not Text(icon, style=...): that styles the whole row
+    label.append(browse.ICONS[concept.status], style=browse.STYLES[concept.status])
+    label.append(f" {concept.name}")
+    label.append(f"\n  {concept.category} · {project_name(concept)}", style="dim")
+    return label
+
+
 def thread_markdown(thread: list[followups.Turn], pending: str | None) -> str:
     if not thread and pending is None:
         return ""
@@ -81,6 +112,24 @@ def thread_markdown(thread: list[followups.Turn], pending: str | None) -> str:
     if pending is not None:
         parts += ["", f"**You:** {pending}", "", "*Thinking…*"]
     return "\n".join(parts)
+
+
+class ConceptList(OptionList):
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("j", "cursor_down", "Down", show=False),
+        Binding("k", "cursor_up", "Up", show=False),
+        Binding("g", "first", "Top", show=False),
+        Binding("G", "last", "Bottom", show=False),
+    ]
+
+
+class LessonPane(VerticalScroll):
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("j", "scroll_down", "Down", show=False),
+        Binding("k", "scroll_up", "Up", show=False),
+        Binding("g", "scroll_home", "Top", show=False),
+        Binding("G", "scroll_end", "Bottom", show=False),
+    ]
 
 
 class SessionPicker(ModalScreen[explain.Session | None]):
@@ -97,7 +146,7 @@ class SessionPicker(ModalScreen[explain.Session | None]):
         self.sessions = sessions
 
     def compose(self) -> ComposeResult:
-        ol = OptionList(
+        ol = ConceptList(
             *(Option(s.label(), id=str(i)) for i, s in enumerate(self.sessions)), id="sessions"
         )
         ol.border_title = "What just happened in…"
@@ -112,25 +161,101 @@ class SessionPicker(ModalScreen[explain.Session | None]):
         self.dismiss(None)
 
 
+ANY = ""  # what ChoicePicker returns for "any"; None means cancelled
+
+
+class ChoicePicker(ModalScreen[str | None]):
+    """Pick one value for a filter, or "any". Enter picks, Escape cancels."""
+
+    CSS = """
+    ChoicePicker { align: center middle; }
+    #choices { width: 50; max-height: 20; border: round $primary; }
+    """
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", "Cancel")]
+
+    def __init__(self, title: str, choices: list[str], current: str | None) -> None:
+        super().__init__()
+        self.title_text = title
+        self.choices = [ANY, *choices]
+        self.current = current or ANY
+
+    def compose(self) -> ComposeResult:
+        ol = ConceptList(
+            *(
+                Option(Text(c or "any", style="italic" if c == ANY else ""), id=str(i))
+                for i, c in enumerate(self.choices)
+            ),
+            id="choices",
+        )
+        ol.border_title = self.title_text
+        ol.highlighted = self.choices.index(self.current) if self.current in self.choices else 0
+        yield ol
+
+    def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
+        event.stop()
+        if event.option_id is not None:  # every option is created with an id
+            self.dismiss(self.choices[int(event.option_id)])
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+
+class HelpScreen(ModalScreen[None]):
+    CSS = """
+    HelpScreen { align: center middle; }
+    #help { width: 76; max-height: 90%; border: round $primary; padding: 0 2; }
+    """
+    BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("escape,question_mark,q", "close", "Close"),
+    ]
+
+    def compose(self) -> ComposeResult:
+        with LessonPane(id="help"):
+            yield Markdown(HELP)
+
+    def action_close(self) -> None:
+        self.dismiss(None)
+
+
 class TutorApp(App[None]):
     TITLE = "Tutor"
     CSS = """
-    #concepts { width: 42; border-right: solid $primary-background; }
+    #sidebar { width: 54; border-right: solid $primary-background; }
+    #tabs { height: 2; }
+    #chips { color: $text-muted; padding: 0 1; }
+    #search, #chips { display: none; }
+    #concepts { height: 1fr; border: none; }
     #lesson-pane { padding: 0 2; }
     #ask { dock: bottom; }
     """
     BINDINGS: ClassVar[list[BindingType]] = [
+        Binding("slash", "search", "Search"),
         Binding("u", "set_status('understood')", "Understood"),
-        Binding("s", "set_status('seen')", "Back to seen"),
-        Binding("d", "set_status('dismissed')", "Dismiss"),
-        Binding("n", "set_status('new')", "Undo dismiss"),
-        Binding("r", "regenerate", "Regenerate"),
-        Binding("h", "toggle_dismissed", "Show dismissed"),
         Binding("f", "ask", "Follow-up"),
         Binding("w", "what_happened", "What just happened"),
-        Binding("x", "show_explanation", "Last explanation"),
-        Binding("escape", "focus_list", "Back to list", show=False),
+        Binding("question_mark", "help", "Keys"),
         Binding("q", "quit", "Quit"),
+        Binding("s", "set_status('seen')", "Back to seen", show=False),
+        Binding("d", "set_status('dismissed')", "Dismiss", show=False),
+        Binding("n", "set_status('new')", "Undo dismiss", show=False),
+        Binding("z", "undo", "Undo status", show=False),
+        Binding("r", "regenerate", "Regenerate", show=False),
+        Binding("x", "show_explanation", "Last explanation", show=False),
+        Binding("p", "pick_project", "Project", show=False),
+        Binding("c", "pick_category", "Category", show=False),
+        Binding("o", "next_sort", "Sort", show=False),
+        Binding("m", "toggle_wide", "Full width", show=False),
+        Binding("h", "focus_list", "Focus list", show=False),
+        Binding("l", "focus_lesson", "Focus lesson", show=False),
+        Binding("ctrl+d", "half_page(1)", "Scroll down", show=False),
+        Binding("ctrl+u", "half_page(-1)", "Scroll up", show=False),
+        Binding("left_square_bracket", "step_tab(-1)", "Previous tab", show=False),
+        Binding("right_square_bracket", "step_tab(1)", "Next tab", show=False),
+        *(
+            Binding(str(i + 1), f"tab({i})", browse.tab_title(t), show=False)
+            for i, t in enumerate(browse.TABS)
+        ),
+        Binding("escape", "escape", "Back", show=False),
     ]
 
     def __init__(
@@ -145,7 +270,13 @@ class TutorApp(App[None]):
         self.cache = cache or lessons.LessonCache()
         self.cfg = cfg or settings.load()
         self.poll_s = poll_s
-        self.show_dismissed = False
+        self.tab: Status | None = browse.TABS[0]
+        self.filters = Filters()
+        self.wide = False  # the list is hidden, the lesson uses the full width
+        # Concepts opened on this tab visit stay listed although opening moved them to `seen`,
+        # so Enter in the New tab doesn't make the lesson's row jump away. Cleared on tab change.
+        self.opened_here: set[str] = set()
+        self.last_change: tuple[str, Status] | None = None  # (concept id, status before), for `z`
         self.concepts: dict[str, Concept] = {}
         self.generating: set[str] = set()
         self.errors: dict[str, str] = {}  # last failed generation per concept, shown until retried
@@ -162,12 +293,25 @@ class TutorApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header()
         with Horizontal():
-            self.concept_list = OptionList(id="concepts")
-            yield self.concept_list
+            # Kept as attributes: `query_one` searches the active screen, which is a picker
+            # while one is open.
+            with Vertical(id="sidebar") as self.sidebar:
+                self.tabs = Tabs(
+                    *(Tab(browse.tab_title(t), id=browse.tab_id(t)) for t in browse.TABS),
+                    id="tabs",
+                )
+                self.tabs.can_focus = False  # tabs switch with keys; focus stays on the list
+                yield self.tabs
+                self.chips = Static(id="chips")
+                yield self.chips
+                self.search_input = Input(
+                    placeholder="search… (Enter: keep, Esc: clear)", id="search"
+                )
+                yield self.search_input
+                self.concept_list = ConceptList(id="concepts")
+                yield self.concept_list
             with Vertical():
-                # Kept as attributes: `query_one` searches the active screen, which is the session
-                # picker while it is open.
-                with VerticalScroll(id="lesson-pane") as self.lesson_pane:
+                with LessonPane(id="lesson-pane") as self.lesson_pane:
                     self.lesson_md = Markdown(id="lesson")
                     yield self.lesson_md
                 self.ask_input = Input(
@@ -203,42 +347,54 @@ class TutorApp(App[None]):
             get_logger().error("tutor pane: %s", e)
             self.show_markdown(f"# Concept memory unreadable\n\n{e}")
             return
+        self.refresh_list()
+
+    def listed(self) -> list[Concept]:
+        """The current tab's concepts after the filters, plus the ones opened on this visit."""
+        everything = list(self.concepts.values())
+        shown = browse.visible(everything, self.tab, self.filters)
+        ids = {c.id for c in shown}
+        extra = [
+            c
+            for c in everything
+            if c.id in self.opened_here
+            and c.id not in ids
+            and c.status is not Status.DISMISSED
+            and browse.matches(c, self.filters)
+        ]
+        return browse.sort(shown + extra, self.filters.sort) if extra else shown
+
+    def refresh_list(self) -> None:
+        """Rebuild tabs, filter line, and list. A concept that left the list (a status change)
+        hands the highlight to the row that took its place."""
+        everything = list(self.concepts.values())
+        counts = browse.counts(everything, self.filters)
+        for t in browse.TABS:
+            self.tabs.query_one(
+                f"#{browse.tab_id(t)}", Tab
+            ).label = f"{browse.tab_title(t)} {counts[t]}"
+        self.chips.update(f"{self.filters.chips()}  (Esc clears)")
+        self.chips.display = self.filters.active
+        self.sub_title = f"{sum(c.status is Status.NEW for c in everything)} new"
+
         option_list = self.concept_list
         keep = self.highlighted_id()
+        index = option_list.highlighted or 0
         option_list.clear_options()
-        for status, group in ordered(list(self.concepts.values()), self.show_dismissed):
-            option_list.add_option(
-                Option(Text(f"{status.upper()} ({len(group)})", style="bold"), disabled=True)
-            )
-            for c in group:
-                label = Text(c.name)
-                label.append(f"\n  {c.category} · {project_name(c)}", style="dim")
-                option_list.add_option(Option(label, id=c.id))
-        self.sub_title = f"{sum(c.status is Status.NEW for c in self.concepts.values())} new"
-        if not self.concepts:
-            self.show_markdown("# No concepts yet\n\nThey appear here as the detector finds them.")
-            return
-        self.highlight(keep)
+        option_list.add_options(Option(row(c), id=c.id) for c in self.listed())
+        self.highlight(keep, fallback=index)
 
-    def highlight(self, cid: str | None) -> None:
+    def highlight(self, cid: str | None, fallback: int = 0) -> None:
         option_list = self.concept_list
-        index = None
+        index: int | None = None
         if cid is not None:
             try:
                 index = option_list.get_option_index(cid)
-            except OptionDoesNotExist:  # hidden now (dismissed) or gone
+            except OptionDoesNotExist:  # moved to another tab, filtered out, or gone
                 index = None
-        if index is None:
-            index = next(
-                (
-                    i
-                    for i in range(option_list.option_count)
-                    if not option_list.get_option_at_index(i).disabled
-                ),
-                None,
-            )
-        if index is not None:
-            option_list.highlighted = index
+        if index is None and option_list.option_count:
+            index = min(fallback, option_list.option_count - 1)
+        option_list.highlighted = index
         self.show_current()
 
     def highlighted_id(self) -> str | None:
@@ -253,7 +409,7 @@ class TutorApp(App[None]):
 
     def on_option_list_option_highlighted(self, event: OptionList.OptionHighlighted) -> None:
         if event.option_list is not self.concept_list:
-            return  # the session picker's list
+            return  # a picker's list
         # A reload clears and refills the list, which posts highlight events for options that are
         # no longer highlighted by the time they arrive. Only a real move leaves an explanation.
         if event.option_id != self.highlighted_id():
@@ -268,6 +424,117 @@ class TutorApp(App[None]):
             self.showing_explanation = False
             self.open(event.option_id)
 
+    # --- tabs, search, filters (ADR 0035) -----------------------------------------------------
+
+    def switch_tab(self, tab: Status | None) -> None:
+        if tab == self.tab:
+            return
+        self.tab = tab
+        self.opened_here.clear()
+        self.tabs.active = browse.tab_id(tab)
+        self.concept_list.highlighted = None  # a new tab starts at its top
+        self.refresh_list()
+
+    def on_tabs_tab_activated(self, event: Tabs.TabActivated) -> None:
+        # A click on a tab. Keys go through `switch_tab`, which sets `active` itself.
+        if event.tab.id is not None:
+            self.switch_tab(next(t for t in browse.TABS if browse.tab_id(t) == event.tab.id))
+
+    def action_tab(self, index: int) -> None:
+        self.switch_tab(browse.TABS[index])
+
+    def action_step_tab(self, step: int) -> None:
+        i = browse.TABS.index(self.tab)
+        self.switch_tab(browse.TABS[(i + step) % len(browse.TABS)])
+
+    def set_filters(self, filters: Filters) -> None:
+        self.filters = filters
+        self.refresh_list()
+
+    def action_search(self) -> None:
+        self.leave_wide()
+        self.search_input.display = True
+        self.search_input.focus()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        if event.input is self.search_input and event.value != self.filters.query:
+            self.set_filters(replace(self.filters, query=event.value))
+
+    def close_search(self, clear: bool) -> None:
+        if clear:
+            self.search_input.value = ""
+            self.set_filters(replace(self.filters, query=""))
+        self.search_input.display = bool(self.search_input.value)
+        self.concept_list.focus()
+
+    def action_pick_project(self) -> None:
+        choices = browse.projects(list(self.concepts.values()))
+        self.push_screen(
+            ChoicePicker("Project", choices, self.filters.project),
+            lambda v: self._picked(v, "project"),
+        )
+
+    def action_pick_category(self) -> None:
+        choices = browse.categories(list(self.concepts.values()))
+        self.push_screen(
+            ChoicePicker("Category", choices, self.filters.category),
+            lambda v: self._picked(v, "category"),
+        )
+
+    def _picked(self, value: str | None, field: str) -> None:
+        if value is not None:  # None: cancelled
+            choice = value or None  # ANY ("") drops the filter
+            if field == "project":
+                self.set_filters(replace(self.filters, project=choice))
+            else:
+                self.set_filters(replace(self.filters, category=choice))
+
+    def action_next_sort(self) -> None:
+        self.set_filters(self.filters.next_sort())
+        self.notify(f"Sort: {self.filters.sort}")
+
+    def action_escape(self) -> None:
+        """Escape: leave an input, else clear the filters."""
+        focused = self.focused
+        if focused is self.search_input:
+            self.close_search(clear=True)
+        elif focused is self.concept_list and self.filters.active:
+            self.search_input.value = ""
+            self.search_input.display = False
+            self.set_filters(Filters())
+            self.notify("Filters cleared")
+        else:
+            self.action_focus_list()
+
+    # --- moving around (ADR 0035) ---------------------------------------------------------------
+
+    def action_focus_list(self) -> None:
+        self.leave_wide()
+        self.concept_list.focus()
+
+    def action_focus_lesson(self) -> None:
+        self.lesson_pane.focus()
+
+    def action_toggle_wide(self) -> None:
+        self.wide = not self.wide
+        self.sidebar.display = not self.wide
+        if self.wide:
+            self.lesson_pane.focus()
+        else:
+            self.concept_list.focus()
+
+    def leave_wide(self) -> None:
+        if self.wide:
+            self.wide = False
+            self.sidebar.display = True
+
+    def action_half_page(self, direction: int) -> None:
+        pane = self.lesson_pane
+        pane.scroll_relative(y=direction * max(1, pane.size.height // 2), animate=False)
+
+    def action_help(self) -> None:
+        self.push_screen(HelpScreen())
+
     # --- lesson pane --------------------------------------------------------------------------
 
     def show_markdown(self, text: str, loading: bool = False, scroll_end: bool = False) -> None:
@@ -280,12 +547,21 @@ class TutorApp(App[None]):
         else:
             pane.scroll_home(animate=False)
 
+    def empty_text(self) -> str:
+        if not self.concepts:
+            return "# No concepts yet\n\nThey appear here as the detector finds them."
+        where = f"{browse.tab_title(self.tab).lower()} concepts" if self.tab else "concepts"
+        if self.filters.active:
+            return f"# Nothing here\n\nNo {where} match the filters. Press **Esc** to clear them."
+        return f"# Nothing here\n\nNo {where}. Switch tabs with **1**–**5** or **[** / **]**."  # noqa: RUF001
+
     def show_current(self, scroll_end: bool = False) -> None:
         """Cached lesson (no LLM call), a generating state, an error, or the card."""
         if self.showing_explanation:
             return
         concept = self.current()
         if concept is None:
+            self.show_markdown(self.empty_text())
             return
         if concept.id in self.generating:
             self.show_markdown(f"# {concept.name}\n\nGenerating the lesson…", loading=True)
@@ -304,6 +580,7 @@ class TutorApp(App[None]):
         concept = self.concepts.get(cid)
         if concept is None:
             return
+        self.opened_here.add(cid)
         if concept.status is Status.NEW:
             self._change(lambda: self.store.mark_seen(cid))
         if not self.cache.has(cid):
@@ -347,10 +624,10 @@ class TutorApp(App[None]):
     def action_ask(self) -> None:
         self.ask_input.focus()
 
-    def action_focus_list(self) -> None:
-        self.concept_list.focus()
-
     def on_input_submitted(self, event: Input.Submitted) -> None:
+        if event.input is self.search_input:
+            self.close_search(clear=False)
+            return
         question = event.value.strip()
         if not question:
             return
@@ -490,12 +767,22 @@ class TutorApp(App[None]):
         if concept.status not in TRANSITIONS[target]:
             self.notify(f"Can't go from {concept.status} to {target}.", severity="warning")
             return
+        self.last_change = (concept.id, concept.status)
+        self.opened_here.discard(concept.id)  # a status change moves it out of this tab
         self._change(lambda: self.store.set_status(concept.id, target))
-        self.notify(f"{concept.name}: {target}")
+        self.notify(f"{browse.ICONS[target]} {concept.name}: {target} · z to undo")
 
-    def action_toggle_dismissed(self) -> None:
-        self.show_dismissed = not self.show_dismissed
-        self.reload()
+    def action_undo(self) -> None:
+        if self.last_change is None:
+            self.notify("Nothing to undo.", severity="warning")
+            return
+        cid, before = self.last_change
+        self.last_change = None
+        self._change(lambda: self.store.set_status(cid, before))
+        concept = self.concepts.get(cid)
+        if concept is not None:
+            self.highlight(cid, fallback=self.concept_list.highlighted or 0)
+            self.notify(f"{browse.ICONS[before]} {concept.name}: back to {before}")
 
     def _change(self, write: Callable[[], object]) -> None:
         try:
