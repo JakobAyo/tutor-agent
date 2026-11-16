@@ -71,7 +71,7 @@ def load_terms(env: str | None, terms_file: Path) -> list[str]:
     if terms_file.is_file():
         raw += terms_file.read_text(encoding="utf-8").splitlines()
     terms = {t.strip() for t in raw if t.strip() and not t.strip().startswith("#")}
-    return sorted(terms, key=len, reverse=True)
+    return sorted(terms, key=lambda t: (-len(t), t))  # longest first, then stable
 
 
 def _email_allowed(address: str, domain: str) -> bool:
