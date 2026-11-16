@@ -107,7 +107,7 @@ async def shoot() -> None:
     for cid in ("dependency-injection", "exponential-backoff-with-jitter"):
         store.set_status(cid, Status.UNDERSTOOD)
     store.set_status("cursor-based-pagination", Status.SEEN)
-    store.set_status("advisory-file-locking", Status.SEEN)
+    # Left `new`: Enter opens it from the New tab, and it stays listed there (ADR 0035).
 
     lock = store.get("advisory-file-locking")
     if lock is None:
@@ -117,7 +117,7 @@ async def shoot() -> None:
     )
 
     app = TutorApp(store=store, cfg=Settings(), poll_s=60)
-    async with app.run_test(size=(120, 36)) as pilot:
+    async with app.run_test(size=(130, 36)) as pilot:
         await pilot.pause()
         app.highlight(lock.id)
         await pilot.pause()
