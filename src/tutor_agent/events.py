@@ -1,4 +1,6 @@
-"""Turn Claude Code transcript records into tutor events (mapping in docs/observation/event-model.md).
+"""Turn Claude Code transcript records into tutor events.
+
+The mapping is described in docs/observation/event-model.md.
 
 Pure functions, no file access: the reader feeds records in, in transcript order.
 """
@@ -6,6 +8,7 @@ Pure functions, no file access: the reader feeds records in, in transcript order
 import json
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import Any
 
 MAX_CONTENT = 2000  # chars per event
 MAX_TOOL_RESULT = 800  # command output is cut harder
@@ -63,7 +66,7 @@ def _hunk(old: str, new: str) -> str:
     return f"--- old\n{old}\n+++ new\n{new}"
 
 
-def edit_content(tool: str, inp: dict, limit: int = MAX_CONTENT) -> str:
+def edit_content(tool: str, inp: dict[str, Any], limit: int = MAX_CONTENT) -> str:
     """An edit as text, cut so that whole hunks survive (M0 lost half a function to a middle cut).
 
     Order of sacrifice: old sides first (the new code is what the lesson explains), then whole
@@ -106,7 +109,7 @@ def _head_lines(text: str, limit: int) -> str:
     return kept + f"\n[... {len(text) - len(kept)} chars cut ...]"
 
 
-def is_prompt(rec: dict) -> bool:
+def is_prompt(rec: dict[str, Any]) -> bool:
     """A real user prompt: not a tool result, not meta, not a wrapper Claude Code injected."""
     if rec.get("type") != "user" or not isinstance(rec.get("message"), dict):
         return False
@@ -118,10 +121,12 @@ def is_prompt(rec: dict) -> bool:
     return any(isinstance(b, dict) and b.get("type") == "text" for b in content or [])
 
 
-def text_of(content) -> str:
+def text_of(content: Any) -> str:
     if isinstance(content, str):
         return content
-    return "\n".join(b.get("text", "") for b in content or [] if isinstance(b, dict) and b.get("type") == "text")
+    return "\n".join(
+        b.get("text", "") for b in content or [] if isinstance(b, dict) and b.get("type") == "text"
+    )
 
 
 class EventMapper:
@@ -130,7 +135,7 @@ class EventMapper:
     def __init__(self) -> None:
         self._bash_ids: set[str] = set()
 
-    def map(self, rec: dict, ref: str) -> list[Event]:
+    def map(self, rec: dict[str, Any], ref: str) -> list[Event]:
         rtype = rec.get("type")
         if rtype not in ("user", "assistant"):
             return []  # unknown and metadata record types are ignored, never an error
@@ -173,7 +178,9 @@ class EventMapper:
                 self._bash_ids.add(b.get("id", ""))
                 out.append(ev(Kind.COMMAND, truncate((b.get("input") or {}).get("command", ""))))
             elif t == "tool_result" and b.get("tool_use_id") in self._bash_ids:
-                out.append(ev(Kind.TOOL_RESULT, truncate(text_of(b.get("content")), MAX_TOOL_RESULT)))
+                out.append(
+                    ev(Kind.TOOL_RESULT, truncate(text_of(b.get("content")), MAX_TOOL_RESULT))
+                )
         return out
 
 

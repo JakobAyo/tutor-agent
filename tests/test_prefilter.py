@@ -31,7 +31,7 @@ def test_empty_batch_is_skipped():
 
 def test_short_chat_is_skipped():
     events = mapped([t.prompt("thanks!"), t.assistant(t.text("You're welcome."))])
-    assert "no edits, no commands" in skip_reason(events)
+    assert "no edits, no commands" in (skip_reason(events) or "")
 
 
 def test_long_explanation_passes():
@@ -44,10 +44,13 @@ def test_prompt_length_does_not_count_as_reasoning():
     assert skip_reason(events) is not None
 
 
-@pytest.mark.parametrize("block", [
-    t.tool_use("1", "Bash", command="ls"),
-    t.tool_use("2", "Write", file_path="/a", content="b"),
-])
+@pytest.mark.parametrize(
+    "block",
+    [
+        t.tool_use("1", "Bash", command="ls"),
+        t.tool_use("2", "Write", file_path="/a", content="b"),
+    ],
+)
 def test_any_edit_or_command_passes(block):
     assert skip_reason(mapped([t.assistant(block)])) is None
 

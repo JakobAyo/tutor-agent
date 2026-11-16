@@ -1,8 +1,9 @@
 """User settings from `settings.toml` in the data directory. Every key is optional."""
 
 import tomllib
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
 from pathlib import Path
+from typing import get_type_hints
 
 from tutor_agent import paths
 
@@ -29,13 +30,17 @@ def load(path: Path | None = None) -> Settings:
     except tomllib.TOMLDecodeError as e:
         raise SettingsError(f"{path}: {e}") from e
 
-    known = {f.name: f for f in fields(Settings)}
+    known = get_type_hints(Settings)
     unknown = set(raw) - set(known)
     if unknown:
         raise SettingsError(f"{path}: unknown keys {sorted(unknown)}")
     for key, value in raw.items():
-        expected = known[key].type
-        ok = isinstance(value, (int, float)) and not isinstance(value, bool) if expected is float else isinstance(value, expected)
+        expected = known[key]
+        ok = (
+            isinstance(value, (int, float)) and not isinstance(value, bool)
+            if expected is float
+            else isinstance(value, expected)
+        )
         if not ok:
             raise SettingsError(f"{path}: '{key}' must be {expected.__name__}, got {value!r}")
     return Settings(**raw)

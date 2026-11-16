@@ -21,7 +21,9 @@ def two_turns(path=None):
 
 def test_recent_sessions_newest_first_with_project_and_last_prompt():
     old = two_turns(session_file("old"))
-    new = t.write(session_file("new", "-home-u-other"), [t.prompt("fix the build", cwd="/home/u/other")])
+    new = t.write(
+        session_file("new", "-home-u-other"), [t.prompt("fix the build", cwd="/home/u/other")]
+    )
     os.utime(old, (1000, 1000))
     os.utime(new, (2000, 2000))
     sessions = explain.recent_sessions()
@@ -35,7 +37,9 @@ def test_recent_sessions_newest_first_with_project_and_last_prompt():
 def test_subagent_activity_makes_a_session_recent():
     a = two_turns(session_file("a"))
     b = two_turns(session_file("b"))
-    sub = t.write(a.parent / "a" / "subagents" / "agent-x.jsonl", [t.prompt("sub task", agent_id="x")])
+    sub = t.write(
+        a.parent / "a" / "subagents" / "agent-x.jsonl", [t.prompt("sub task", agent_id="x")]
+    )
     os.utime(a, (1000, 1000))
     os.utime(b, (2000, 2000))
     os.utime(sub, (3000, 3000))
@@ -44,8 +48,10 @@ def test_subagent_activity_makes_a_session_recent():
 
 def test_label_finds_a_prompt_far_back(monkeypatch):
     monkeypatch.setattr(explain, "TAIL_BYTES", 200)
-    path = t.write(session_file(), [t.prompt("the real prompt")] +
-                   [t.assistant(t.text("x" * 300)) for _ in range(20)])
+    path = t.write(
+        session_file(),
+        [t.prompt("the real prompt")] + [t.assistant(t.text("x" * 300)) for _ in range(20)],
+    )
     assert explain.describe(path, 0).last_prompt == "the real prompt"
 
 
@@ -58,14 +64,26 @@ def test_latest_turn_starts_at_the_last_prompt():
     turn = explain.latest_turn(explain.describe(path, 0))
     assert turn.events[0].kind is Kind.PROMPT and turn.events[0].content == "add caching #1"
     assert all(e.timestamp == T1 for e in turn.events)
-    assert [e.kind for e in turn.events] == [Kind.PROMPT, Kind.REASONING, Kind.EDIT, Kind.COMMAND,
-                                             Kind.TOOL_RESULT, Kind.REASONING]
+    assert [e.kind for e in turn.events] == [
+        Kind.PROMPT,
+        Kind.REASONING,
+        Kind.EDIT,
+        Kind.COMMAND,
+        Kind.TOOL_RESULT,
+        Kind.REASONING,
+    ]
 
 
 def test_injected_wrappers_do_not_start_a_new_turn():
     path = two_turns()
-    t.write(path, [t.prompt("<task-notification>agent done</task-notification>", timestamp=T2),
-                   t.assistant(t.text("The subagent finished."), timestamp=T2)], append=True)
+    t.write(
+        path,
+        [
+            t.prompt("<task-notification>agent done</task-notification>", timestamp=T2),
+            t.assistant(t.text("The subagent finished."), timestamp=T2),
+        ],
+        append=True,
+    )
     turn = explain.latest_turn(explain.describe(path, 0))
     assert turn.events[0].content == "add caching #1"
     assert turn.events[-1].content == "The subagent finished."
@@ -73,11 +91,14 @@ def test_injected_wrappers_do_not_start_a_new_turn():
 
 def test_latest_turn_includes_subagent_work_from_the_same_span():
     path = two_turns()
-    t.write(path.parent / t.SESSION / "subagents" / "agent-x.jsonl", [
-        t.assistant(t.text("old subagent work"), agent_id="x", timestamp=T0),
-        t.assistant(t.tool_use("s1", "Bash", command="ruff check"), agent_id="x", timestamp=T2),
-        t.tool_result("s1", "All checks passed", agent_id="x", timestamp=T2),
-    ])
+    t.write(
+        path.parent / t.SESSION / "subagents" / "agent-x.jsonl",
+        [
+            t.assistant(t.text("old subagent work"), agent_id="x", timestamp=T0),
+            t.assistant(t.tool_use("s1", "Bash", command="ruff check"), agent_id="x", timestamp=T2),
+            t.tool_result("s1", "All checks passed", agent_id="x", timestamp=T2),
+        ],
+    )
     turn = explain.latest_turn(explain.describe(path, 0))
     contents = [e.content for e in turn.events]
     assert "old subagent work" not in contents
@@ -86,8 +107,11 @@ def test_latest_turn_includes_subagent_work_from_the_same_span():
 
 
 def test_fit_keeps_the_prompt_and_the_newest_events():
-    path = t.write(session_file(), [t.prompt("go", timestamp=T1)] +
-                   [t.assistant(t.text(f"step {i} " + "x" * 100), timestamp=T1) for i in range(10)])
+    path = t.write(
+        session_file(),
+        [t.prompt("go", timestamp=T1)]
+        + [t.assistant(t.text(f"step {i} " + "x" * 100), timestamp=T1) for i in range(10)],
+    )
     events = explain.latest_turn(explain.describe(path, 0)).events
     kept, dropped = explain.fit(events, budget=350)
     assert kept[0].content == "go"
@@ -98,8 +122,10 @@ def test_fit_keeps_the_prompt_and_the_newest_events():
 
 def test_explain_calls_the_lesson_model_with_the_turn_and_known_concepts(fake_claude):
     path = two_turns()
-    t.write(path.parent / t.SESSION / "subagents" / "agent-x.jsonl",
-            [t.assistant(t.text("subagent says hi"), agent_id="x", timestamp=T2)])
+    t.write(
+        path.parent / t.SESSION / "subagents" / "agent-x.jsonl",
+        [t.assistant(t.text("subagent says hi"), agent_id="x", timestamp=T2)],
+    )
     turn = explain.latest_turn(explain.describe(path, 0))
     text = explain.explain(turn, [], Settings(lesson_model="opus"))
     argv = fake_claude.record["argv"]

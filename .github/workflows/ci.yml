@@ -1,0 +1,118 @@
+# Quality gates. Runs on every PR into develop or main, and is reused (workflow_call)
+# by develop.yml and release.yml so nothing ships without passing it.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UV_VERSION: "0.11.18"
+  FORCE_COLOR: "1"
+
+jobs:
+  lint:
+    name: Lint & format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Lockfile is up to date
+        run: uv lock --check
+      - name: ruff check
+        run: uv run --frozen ruff check --output-format=github
+      - name: ruff format
+        run: uv run --frozen ruff format --check
+
+  typecheck:
+    name: Type check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: mypy (strict, src)
+        run: uv run --frozen mypy
+      - name: mypy (tests)
+        run: >-
+          uv run --frozen mypy tests
+          --allow-untyped-defs --allow-incomplete-defs --allow-untyped-calls --check-untyped-defs
+
+  test:
+    name: Test (Python ${{ matrix.python }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: pytest (offline, with coverage floor)
+        run: uv run --frozen pytest --cov --cov-report=term --cov-report=xml
+      - name: Coverage summary
+        if: always() && matrix.python == '3.12'
+        run: |
+          {
+            echo "### Coverage (Python ${{ matrix.python }})"
+            echo '```'
+            uv run --frozen coverage report --skip-covered || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    name: Build & smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: ${{ env.UV_VERSION }}
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Check package metadata
+        run: uvx twine check --strict dist/*
+      - name: Install the wheel in a clean env and run the CLI
+        run: |
+          uv venv /tmp/smoke
+          uv pip install --python /tmp/smoke dist/*.whl
+          /tmp/smoke/bin/tutor --help
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+
+  # The single check to mark as "required" in branch rules, so adding or renaming
+  # jobs above never needs a settings change.
+  ci-passed:
+    name: CI passed
+    if: always()
+    needs: [lint, typecheck, test, build, dependency-review]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All jobs succeeded (or were skipped on purpose)
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'to_entries | all(.value.result == "success" or .value.result == "skipped")'

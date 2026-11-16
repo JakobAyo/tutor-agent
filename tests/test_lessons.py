@@ -11,10 +11,20 @@ SNIPPET = 'def retry(fn):\n    """```inner fence```"""\n    for delay in (1, 2, 
 
 def concept(**kw) -> Concept:
     old = Source(snippet="old = 1", context="first time", project="/home/me/Projects/old")
-    new = Source(snippet=SNIPPET, context="the agent wrapped a flaky call", project="/home/me/Projects/api",
-                 file="/home/me/Projects/api/client.py")
-    base = dict(id="retry-with-backoff", name="Retry with backoff", category="Design patterns",
-                summary="Retry a failing call with growing delays.", sources=[old, new])
+    new = Source(
+        snippet=SNIPPET,
+        context="the agent wrapped a flaky call",
+        project="/home/me/Projects/api",
+        file="/home/me/Projects/api/client.py",
+    )
+    base = {
+        "id": "retry-with-backoff",
+        "name": "Retry with backoff",
+        "category": "Design patterns",
+        "summary": "Retry a failing call with growing delays.",
+        "sources": [old, new],
+    }
+
     return Concept(**{**base, **kw})
 
 
@@ -71,8 +81,13 @@ def test_failed_call_raises(fake_claude):
 def test_cache_round_trip_and_atomic_write(data_dir):
     cache = lessons.LessonCache()
     assert cache.get("retry-with-backoff") is None
-    lesson = lessons.Lesson("retry-with-backoff", "## What the agent did\n...", "sonnet", "t",
-                            lessons.lesson_source(concept()))
+    lesson = lessons.Lesson(
+        "retry-with-backoff",
+        "## What the agent did\n...",
+        "sonnet",
+        "t",
+        lessons.lesson_source(concept()),
+    )
     cache.put(lesson)
     assert cache.get("retry-with-backoff") == lesson
     assert [p.name for p in (data_dir / "lessons").iterdir()] == ["retry-with-backoff.json"]

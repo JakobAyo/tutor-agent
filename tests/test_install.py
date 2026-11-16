@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import pytest
 
@@ -17,21 +18,27 @@ def our_commands(settings):
     ]
 
 
-@pytest.mark.parametrize("command,ours", [
-    (CMD, True),
-    ("tutor hook", True),
-    ("'/path with space/tutor' hook", True),
-    ("/usr/bin/other-tutor hook", False),
-    ("tutor hooks", False),
-    ("echo tutor hook && rm x", False),
-])
+@pytest.mark.parametrize(
+    ("command", "ours"),
+    [
+        (CMD, True),
+        ("tutor hook", True),
+        ("'/path with space/tutor' hook", True),
+        ("/usr/bin/other-tutor hook", False),
+        ("tutor hooks", False),
+        ("echo tutor hook && rm x", False),
+    ],
+)
 def test_is_ours(command, ours):
     assert install.is_ours(command) is ours
 
 
 def test_with_hook_keeps_other_hooks_and_is_idempotent():
     theirs = {"hooks": [{"type": "command", "command": "notify.sh"}]}
-    settings = {"model": "opus", "hooks": {"Stop": [theirs], "PreToolUse": [theirs]}}
+    settings: dict[str, Any] = {
+        "model": "opus",
+        "hooks": {"Stop": [theirs], "PreToolUse": [theirs]},
+    }
     once = install.with_hook(settings, CMD)
     assert once["model"] == "opus" and once["hooks"]["PreToolUse"] == [theirs]
     assert once["hooks"]["Stop"][0] == theirs
@@ -53,7 +60,9 @@ def test_without_hook_restores_original():
 
 
 def test_without_hook_keeps_mixed_group():
-    group = {"hooks": [{"type": "command", "command": "notify.sh"}, {"type": "command", "command": CMD}]}
+    group = {
+        "hooks": [{"type": "command", "command": "notify.sh"}, {"type": "command", "command": CMD}]
+    }
     out = install.without_hook({"hooks": {"Stop": [group]}})
     assert out == {"hooks": {"Stop": [{"hooks": [{"type": "command", "command": "notify.sh"}]}]}}
 
@@ -62,8 +71,10 @@ def test_apply_asks_backs_up_and_writes(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text('{"model": "opus"}\n')
     path.chmod(0o600)
-    lines = []
-    assert install.apply(lambda s: install.with_hook(s, CMD), path=path, ask=lambda _: "y", out=lines.append)
+    lines: list[str] = []
+    assert install.apply(
+        lambda s: install.with_hook(s, CMD), path=path, ask=lambda _: "y", out=lines.append
+    )
     assert our_commands(json.loads(path.read_text())) == [CMD, CMD]
     assert path.stat().st_mode & 0o777 == 0o600
     (backup,) = tmp_path.glob("settings.json.tutor-backup-*")
@@ -74,7 +85,9 @@ def test_apply_asks_backs_up_and_writes(tmp_path):
 def test_apply_declined_writes_nothing(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text("{}\n")
-    assert not install.apply(lambda s: install.with_hook(s, CMD), path=path, ask=lambda _: "", out=lambda _: None)
+    assert not install.apply(
+        lambda s: install.with_hook(s, CMD), path=path, ask=lambda _: "", out=lambda _: None
+    )
     assert path.read_text() == "{}\n" and list(tmp_path.iterdir()) == [path]
 
 
@@ -87,7 +100,9 @@ def test_apply_refuses_invalid_json(tmp_path):
 
 def test_apply_creates_missing_file_without_backup(tmp_path):
     path = tmp_path / "claude/settings.json"
-    install.apply(lambda s: install.with_hook(s, CMD), path=path, assume_yes=True, out=lambda _: None)
+    install.apply(
+        lambda s: install.with_hook(s, CMD), path=path, assume_yes=True, out=lambda _: None
+    )
     assert our_commands(json.loads(path.read_text())) == [CMD, CMD]
     assert list(path.parent.iterdir()) == [path]
 

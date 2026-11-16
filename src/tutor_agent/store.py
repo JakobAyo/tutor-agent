@@ -5,8 +5,9 @@ the old or the new version, never a half-written one. Writers take an exclusive 
 separate lock file, so two processes can't both read version N and overwrite each other's change.
 """
 
-from __future__ import annotations  # the `list` method shadows the builtin in annotations
+from __future__ import annotations
 
+import builtins  # ConceptStore.list shadows the builtin inside the class
 import fcntl
 import json
 import os
@@ -18,6 +19,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Any
 
 from tutor_agent import paths
 
@@ -49,7 +51,10 @@ def concept_id(name: str) -> str:
 
 @dataclass
 class Source:
-    """Where a concept appeared. The snippet is stored so lessons outlive the transcript (ADR 0013)."""
+    """Where a concept appeared.
+
+    The snippet is stored so lessons outlive the transcript (ADR 0013).
+    """
 
     snippet: str
     context: str
@@ -73,8 +78,14 @@ class Concept:
     sources: list[Source] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "Concept":
-        return cls(**{**raw, "status": Status(raw["status"]), "sources": [Source(**s) for s in raw["sources"]]})
+    def from_dict(cls, raw: dict[str, Any]) -> Concept:
+        return cls(
+            **{
+                **raw,
+                "status": Status(raw["status"]),
+                "sources": [Source(**s) for s in raw["sources"]],
+            }
+        )
 
 
 @dataclass(frozen=True)
@@ -104,11 +115,13 @@ class ConceptStore:
     def get(self, cid: str) -> Concept | None:
         return self._load().get(cid)
 
-    def add(self, name: str, category: str, summary: str, source: Source) -> tuple[Concept, Outcome]:
+    def add(
+        self, name: str, category: str, summary: str, source: Source
+    ) -> tuple[Concept, Outcome]:
         """Add a concept, or attach the source if it already exists (see `record`)."""
         return self.record([Entry(name, category, summary, source)])[0]
 
-    def record(self, entries: list[Entry]) -> list[tuple[Concept, Outcome]]:
+    def record(self, entries: builtins.list[Entry]) -> builtins.list[tuple[Concept, Outcome]]:
         """Store a detection batch in one transaction, so it lands whole or not at all.
 
         Unknown names become `new` concepts. Known ones get the source attached, except dismissed
@@ -120,7 +133,13 @@ class ConceptStore:
                 cid = concept_id(e.name)
                 existing = concepts.get(cid)
                 if existing is None:
-                    concept = Concept(id=cid, name=e.name, category=e.category, summary=e.summary, sources=[e.source])
+                    concept = Concept(
+                        id=cid,
+                        name=e.name,
+                        category=e.category,
+                        summary=e.summary,
+                        sources=[e.source],
+                    )
                     concepts[cid] = concept
                     out.append((concept, Outcome.CREATED))
                 elif existing.status is Status.DISMISSED:
@@ -138,7 +157,7 @@ class ConceptStore:
             concept.updated_at = now()
             return concept
 
-    def set_status(self, cid: str, status: Status) -> Concept:
+    def set_status(self, cid: str, status: Status | str) -> Concept:
         with self._transaction() as concepts:
             concept = self._require(concepts, cid)
             concept.status = Status(status)
@@ -146,7 +165,10 @@ class ConceptStore:
             return concept
 
     def mark_seen(self, cid: str) -> Concept:
-        """Opening a lesson moves `new` to `seen`. It never downgrades `understood` or `dismissed`."""
+        """Opening a lesson moves `new` to `seen`.
+
+        It never downgrades `understood` or `dismissed`.
+        """
         with self._transaction() as concepts:
             concept = self._require(concepts, cid)
             if concept.status is Status.NEW:
@@ -162,9 +184,12 @@ class ConceptStore:
 
     @contextmanager
     def _transaction(self) -> Iterator[dict[str, Concept]]:
-        """Lock, load, let the caller change the dict, save. Nothing is saved if the caller raises."""
+        """Lock, load, let the caller change the dict, save.
+
+        Nothing is saved if the caller raises.
+        """
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with open(self.lock_path, "a") as lock:
+        with self.lock_path.open("a") as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
             try:
                 concepts = self._load()
@@ -192,7 +217,7 @@ class ConceptStore:
                 json.dump(payload, f, indent=1, ensure_ascii=False)
                 f.flush()
                 os.fsync(f.fileno())
-            os.replace(tmp, self.path)
+            Path(tmp).replace(self.path)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise

@@ -6,15 +6,29 @@ from tutor_agent.lessons import Lesson
 from tutor_agent.settings import Settings
 from tutor_agent.store import Concept, Source, Status
 
-SOURCE = Source(snippet="for delay in (1, 2, 4):\n    ...", context="the agent wrapped a flaky call",
-                project="/home/me/Projects/api", file="/home/me/Projects/api/client.py")
+SOURCE = Source(
+    snippet="for delay in (1, 2, 4):\n    ...",
+    context="the agent wrapped a flaky call",
+    project="/home/me/Projects/api",
+    file="/home/me/Projects/api/client.py",
+)
 LESSON = Lesson("retry-with-backoff", "## What the agent did\nIt retries.", "sonnet", "t", SOURCE)
 
 
-def concept(cid="retry-with-backoff", status=Status.SEEN, updated="2026-11-13T10:00:00+00:00", **kw) -> Concept:
+def concept(
+    cid="retry-with-backoff", status=Status.SEEN, updated="2026-11-13T10:00:00+00:00", **kw
+) -> Concept:
     name = kw.pop("name", cid.replace("-", " ").capitalize())
-    return Concept(id=cid, name=name, category="Design patterns", summary=f"About {name}.",
-                   status=status, updated_at=updated, sources=[SOURCE], **kw)
+    return Concept(
+        id=cid,
+        name=name,
+        category="Design patterns",
+        summary=f"About {name}.",
+        status=status,
+        updated_at=updated,
+        sources=[SOURCE],
+        **kw,
+    )
 
 
 def test_known_concepts_are_seen_or_understood_newest_first_without_the_lesson_itself():
@@ -61,7 +75,14 @@ def test_prompt_marks_trimmed_thread_and_empty_knowledge():
 
 
 def test_answer_uses_the_lesson_model_without_tools_or_session(fake_claude):
-    text = followups.answer(concept(), LESSON, [], [], "Why?", Settings(lesson_model="opus"))
+    text = followups.answer(
+        concept(),
+        LESSON,
+        thread=[],
+        known=[],
+        question="Why?",
+        settings=Settings(lesson_model="opus"),
+    )
     argv = fake_claude.record["argv"]
     assert argv[argv.index("--model") + 1] == "opus"
     assert "--no-session-persistence" in argv and "--resume" not in argv  # ADR 0012
@@ -72,4 +93,6 @@ def test_answer_uses_the_lesson_model_without_tools_or_session(fake_claude):
 def test_failed_answer_raises(fake_claude):
     fake_claude.mode("fail")
     with pytest.raises(runner.ClaudeError):
-        followups.answer(concept(), LESSON, [], [], "Why?", Settings())
+        followups.answer(
+            concept(), LESSON, thread=[], known=[], question="Why?", settings=Settings()
+        )

@@ -44,6 +44,9 @@ def log_file() -> Path:
 
 
 def claude_projects_dir() -> Path:
-    """Where Claude Code keeps session transcripts. Honours `CLAUDE_CONFIG_DIR`, like Claude Code."""
+    """Where Claude Code keeps session transcripts.
+
+    Honours `CLAUDE_CONFIG_DIR`, like Claude Code.
+    """
     base = os.environ.get("CLAUDE_CONFIG_DIR")
     return (Path(base) if base else Path.home() / ".claude") / "projects"

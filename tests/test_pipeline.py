@@ -7,14 +7,28 @@ import time
 import transcripts as t
 
 from tutor_agent import cli, paths
-from tutor_agent.store import ConceptStore, Source, Status
+from tutor_agent.store import Concept, ConceptStore, Source, Status
 
 EDIT_INDEX = 2  # in t.turn(): prompt, reasoning, edit, command, tool_result, reasoning
 
 
-def found(name="LRU caching", *, reuses_known=False, event_index=EDIT_INDEX, category="Design patterns"):
-    return {"name": name, "category": category, "summary": "Keep the most recent results.",
-            "why_here": "The agent cached lookups.", "event_index": event_index, "reuses_known": reuses_known}
+def get(store: ConceptStore, cid: str) -> Concept:
+    concept = store.get(cid)
+    assert concept is not None, f"{cid} not in the store"
+    return concept
+
+
+def found(
+    name="LRU caching", *, reuses_known=False, event_index=EDIT_INDEX, category="Design patterns"
+):
+    return {
+        "name": name,
+        "category": category,
+        "summary": "Keep the most recent results.",
+        "why_here": "The agent cached lookups.",
+        "event_index": event_index,
+        "reuses_known": reuses_known,
+    }
 
 
 def run_detect(tmp_path, n=0, append=False) -> int:
@@ -41,8 +55,13 @@ def test_new_concept_is_stored_with_snippet_and_notified(tmp_path, fake_claude, 
     [src] = c.sources
     assert src.snippet == "--- old\nx\n+++ new\ny"
     assert src.context == "The agent cached lookups."
-    assert (src.project, src.session_id, src.file) == ("/home/u/proj", t.SESSION, "/home/u/proj/a.py")
+    assert (src.project, src.session_id, src.file) == (
+        "/home/u/proj",
+        t.SESSION,
+        "/home/u/proj/a.py",
+    )
     assert src.kind == "edit"
+    assert src.transcript_ref is not None
     assert src.transcript_ref.endswith(f"{t.SESSION}.jsonl:4")
     assert titles(fake_notify) == ["• LRU caching (Design patterns)"]
 
@@ -76,11 +95,19 @@ def test_renamed_known_concept_is_dropped(tmp_path, fake_claude, fake_notify):
 
 
 def test_same_concept_twice_in_a_batch_is_stored_once(tmp_path, fake_claude, fake_notify):
-    fake_claude.answer({"concepts": [found(), found("LRU Caching", event_index=1), found("Fakes", category="Testing")]})
+    fake_claude.answer(
+        {
+            "concepts": [
+                found(),
+                found("LRU Caching", event_index=1),
+                found("Fakes", category="Testing"),
+            ]
+        }
+    )
     run_detect(tmp_path)
     store = ConceptStore()
     assert sorted(c.id for c in store.list()) == ["fakes", "lru-caching"]
-    assert len(store.get("lru-caching").sources) == 1
+    assert len(get(store, "lru-caching").sources) == 1
     assert titles(fake_notify) == ["• LRU caching (Design patterns)\n• Fakes (Testing)"]
 
 
@@ -122,11 +149,13 @@ def test_invalid_output_stores_nothing(tmp_path, fake_claude, fake_notify):
     assert ConceptStore().list() == [] and fake_notify.calls == []
 
 
-def test_detection_waits_for_a_running_one_and_sees_its_concepts(tmp_path, fake_claude, fake_notify):
+def test_detection_waits_for_a_running_one_and_sees_its_concepts(
+    tmp_path, fake_claude, fake_notify
+):
     # Two overlapping detections both read KNOWN before either stored, and the second named the
     # first one's concepts again under new names (M6 log, ADR 0032).
     fake_claude.answer({"concepts": [found()]})
-    with open(paths.detect_lock_file(), "a") as lock:
+    with paths.detect_lock_file().open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)  # a detection is running
         worker = threading.Thread(target=run_detect, args=(tmp_path,))
         worker.start()

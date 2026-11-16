@@ -10,14 +10,17 @@ polled once a second, so concepts the detector adds show up without a restart.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import ClassVar
+
 from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Input, Markdown, OptionList
-from textual.widgets.option_list import Option
+from textual.widgets.option_list import Option, OptionDoesNotExist
 
 from tutor_agent import explain, followups, lessons, paths, settings
 from tutor_agent.log import get_logger
@@ -45,7 +48,9 @@ def ordered(concepts: list[Concept], show_dismissed: bool) -> list[tuple[Status,
     for status in GROUPS:
         if status is Status.DISMISSED and not show_dismissed:
             continue
-        group = sorted((c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True)
+        group = sorted(
+            (c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True
+        )
         if group:
             out.append((status, group))
     return out
@@ -57,7 +62,7 @@ def card(concept: Concept) -> str:
         f"# {concept.name}",
         "",
         f"*{concept.category}* · **{concept.status}** · {project_name(concept)} · "
-        f"seen {len(concept.sources)}×",
+        f"seen {len(concept.sources)}×",  # noqa: RUF001  # the multiplication sign is intended
         "",
         concept.summary,
     ]
@@ -85,33 +90,36 @@ class SessionPicker(ModalScreen[explain.Session | None]):
     SessionPicker { align: center middle; }
     #sessions { width: 90; max-height: 24; border: round $primary; }
     """
-    BINDINGS = [Binding("escape", "cancel", "Cancel")]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", "Cancel")]
 
     def __init__(self, sessions: list[explain.Session]) -> None:
         super().__init__()
         self.sessions = sessions
 
     def compose(self) -> ComposeResult:
-        ol = OptionList(*(Option(s.label(), id=str(i)) for i, s in enumerate(self.sessions)), id="sessions")
+        ol = OptionList(
+            *(Option(s.label(), id=str(i)) for i, s in enumerate(self.sessions)), id="sessions"
+        )
         ol.border_title = "What just happened in…"
         yield ol
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         event.stop()
-        self.dismiss(self.sessions[int(event.option_id)])
+        if event.option_id is not None:  # every option is created with an id
+            self.dismiss(self.sessions[int(event.option_id)])
 
     def action_cancel(self) -> None:
         self.dismiss(None)
 
 
-class TutorApp(App):
+class TutorApp(App[None]):
     TITLE = "Tutor"
     CSS = """
     #concepts { width: 42; border-right: solid $primary-background; }
     #lesson-pane { padding: 0 2; }
     #ask { dock: bottom; }
     """
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("u", "set_status('understood')", "Understood"),
         Binding("s", "set_status('seen')", "Back to seen"),
         Binding("d", "set_status('dismissed')", "Dismiss"),
@@ -125,8 +133,13 @@ class TutorApp(App):
         Binding("q", "quit", "Quit"),
     ]
 
-    def __init__(self, store: ConceptStore | None = None, cache: lessons.LessonCache | None = None,
-                 cfg: settings.Settings | None = None, poll_s: float = 1.0) -> None:
+    def __init__(
+        self,
+        store: ConceptStore | None = None,
+        cache: lessons.LessonCache | None = None,
+        cfg: settings.Settings | None = None,
+        poll_s: float = 1.0,
+    ) -> None:
         super().__init__()
         self.store = store or ConceptStore()
         self.cache = cache or lessons.LessonCache()
@@ -136,7 +149,9 @@ class TutorApp(App):
         self.concepts: dict[str, Concept] = {}
         self.generating: set[str] = set()
         self.errors: dict[str, str] = {}  # last failed generation per concept, shown until retried
-        self.threads: dict[str, list[followups.Turn]] = {}  # follow-ups per concept, kept while open
+        self.threads: dict[
+            str, list[followups.Turn]
+        ] = {}  # follow-ups per concept, kept while open
         self.asking: dict[str, str] = {}  # concept id -> the question being answered
         self.explaining: explain.Session | None = None
         self.explanation: tuple[explain.Session, str] | None = None  # the last one, for `x`
@@ -155,7 +170,9 @@ class TutorApp(App):
                 with VerticalScroll(id="lesson-pane") as self.lesson_pane:
                     self.lesson_md = Markdown(id="lesson")
                     yield self.lesson_md
-                self.ask_input = Input(placeholder="f: ask a follow-up about the open lesson · Esc: back", id="ask")
+                self.ask_input = Input(
+                    placeholder="f: ask a follow-up about the open lesson · Esc: back", id="ask"
+                )
                 yield self.ask_input
         yield Footer()
 
@@ -190,7 +207,9 @@ class TutorApp(App):
         keep = self.highlighted_id()
         option_list.clear_options()
         for status, group in ordered(list(self.concepts.values()), self.show_dismissed):
-            option_list.add_option(Option(Text(f"{status.upper()} ({len(group)})", style="bold"), disabled=True))
+            option_list.add_option(
+                Option(Text(f"{status.upper()} ({len(group)})", style="bold"), disabled=True)
+            )
             for c in group:
                 label = Text(c.name)
                 label.append(f"\n  {c.category} · {project_name(c)}", style="dim")
@@ -207,11 +226,17 @@ class TutorApp(App):
         if cid is not None:
             try:
                 index = option_list.get_option_index(cid)
-            except Exception:  # hidden now (dismissed) or gone
+            except OptionDoesNotExist:  # hidden now (dismissed) or gone
                 index = None
         if index is None:
-            index = next((i for i in range(option_list.option_count)
-                          if not option_list.get_option_at_index(i).disabled), None)
+            index = next(
+                (
+                    i
+                    for i in range(option_list.option_count)
+                    if not option_list.get_option_at_index(i).disabled
+                ),
+                None,
+            )
         if index is not None:
             option_list.highlighted = index
         self.show_current()
@@ -256,7 +281,7 @@ class TutorApp(App):
             pane.scroll_home(animate=False)
 
     def show_current(self, scroll_end: bool = False) -> None:
-        """Cached lesson if there is one (no LLM call), a generating state, an error, or the card."""
+        """Cached lesson (no LLM call), a generating state, an error, or the card."""
         if self.showing_explanation:
             return
         concept = self.current()
@@ -304,7 +329,8 @@ class TutorApp(App):
             lesson = lessons.generate(concept, self.cfg)
             self.cache.put(lesson)
             error = None
-        except Exception as e:  # ClaudeError, LessonError, OSError: shown in the pane, logged
+        # Worker thread: any failure is shown in the pane and logged, it must not kill the TUI.
+        except Exception as e:  # noqa: BLE001  # ClaudeError, LessonError, OSError, ...
             get_logger().exception("lesson failed for %s", concept.id)
             error = str(e) or type(e).__name__
         self.call_from_thread(self.lesson_done, concept.id, error)
@@ -339,22 +365,41 @@ class TutorApp(App):
         event.input.clear()
         self.asking[concept.id] = question
         known = followups.known_concepts(list(self.concepts.values()), exclude=concept.id)
-        self.answer_followup(concept, lesson, list(self.threads.get(concept.id, [])), known, question)
+        self.answer_followup(
+            concept, lesson, list(self.threads.get(concept.id, [])), known, question
+        )
         self.show_current(scroll_end=True)
 
     @work(thread=True, group="followups")
-    def answer_followup(self, concept: Concept, lesson: lessons.Lesson, thread: list[followups.Turn],
-                        known: list[Concept], question: str) -> None:
+    def answer_followup(
+        self,
+        concept: Concept,
+        lesson: lessons.Lesson,
+        thread: list[followups.Turn],
+        known: list[Concept],
+        question: str,
+    ) -> None:
         try:
-            text, error = followups.answer(concept, lesson, thread, known, question, self.cfg), None
-        except Exception as e:  # ClaudeError, FollowUpError: shown as a notification, logged
+            text, error = (
+                followups.answer(
+                    concept,
+                    lesson,
+                    thread=thread,
+                    known=known,
+                    question=question,
+                    settings=self.cfg,
+                ),
+                None,
+            )
+        # Worker thread: any failure is shown as a notification and logged.
+        except Exception as e:  # noqa: BLE001  # ClaudeError, FollowUpError, ...
             get_logger().exception("follow-up failed for %s", concept.id)
             text, error = None, str(e) or type(e).__name__
         self.call_from_thread(self.followup_done, concept.id, question, text, error)
 
     def followup_done(self, cid: str, question: str, text: str | None, error: str | None) -> None:
         self.asking.pop(cid, None)
-        if error:
+        if text is None:  # the worker sets `error` exactly when there is no text
             self.notify(f"Follow-up failed: {error}", severity="error")
             if not self.ask_input.value:
                 self.ask_input.value = question  # don't make me type it again
@@ -384,7 +429,9 @@ class TutorApp(App):
             return
         self.explaining = session
         self.showing_explanation = True
-        self.show_markdown(f"# What just happened\n\n{session.label()}\n\nReading the latest turn…", loading=True)
+        self.show_markdown(
+            f"# What just happened\n\n{session.label()}\n\nReading the latest turn…", loading=True
+        )
         self.explain_turn(session, followups.known_concepts(list(self.concepts.values())))
 
     @work(thread=True, group="explain")
@@ -393,15 +440,20 @@ class TutorApp(App):
             turn = explain.latest_turn(session)
             text, error = explain.explain(turn, known, self.cfg), None
             if turn.dropped_events:
-                text += f"\n\n*{turn.dropped_events} earlier events of this long turn were left out.*"
-        except Exception as e:  # OSError, ClaudeError, ExplainError
+                text += (
+                    f"\n\n*{turn.dropped_events} earlier events of this long turn were left out.*"
+                )
+        # Worker thread: any failure is shown as a notification and logged.
+        except Exception as e:  # noqa: BLE001  # OSError, ClaudeError, ExplainError, ...
             get_logger().exception("explanation failed for %s", session.transcript)
             text, error = None, str(e) or type(e).__name__
         self.call_from_thread(self.explanation_done, session, text, error)
 
-    def explanation_done(self, session: explain.Session, text: str | None, error: str | None) -> None:
+    def explanation_done(
+        self, session: explain.Session, text: str | None, error: str | None
+    ) -> None:
         self.explaining = None
-        if error:
+        if text is None:  # the worker sets `error` exactly when there is no text
             self.notify(f"Explanation failed: {error}", severity="error")
             if self.showing_explanation:
                 self.showing_explanation = False
@@ -424,7 +476,9 @@ class TutorApp(App):
         session, text = self.explanation
         self.showing_explanation = True
         project = session.project or "unknown project"
-        self.show_markdown(f"# What just happened\n\n*{project} · session {session.session_id[:8]}*\n\n{text}")
+        self.show_markdown(
+            f"# What just happened\n\n*{project} · session {session.session_id[:8]}*\n\n{text}"
+        )
 
     # --- status actions -----------------------------------------------------------------------
 
@@ -443,7 +497,7 @@ class TutorApp(App):
         self.show_dismissed = not self.show_dismissed
         self.reload()
 
-    def _change(self, write) -> None:
+    def _change(self, write: Callable[[], object]) -> None:
         try:
             write()
         except (StoreError, KeyError, OSError) as e:

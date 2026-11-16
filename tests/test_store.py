@@ -4,22 +4,45 @@ import multiprocessing as mp
 import pytest
 
 from tutor_agent import paths
-from tutor_agent.store import ConceptStore, Entry, Outcome, Source, Status, StoreError, concept_id
+from tutor_agent.store import (
+    Concept,
+    ConceptStore,
+    Entry,
+    Outcome,
+    Source,
+    Status,
+    StoreError,
+    concept_id,
+)
+
+
+def get(store: ConceptStore, cid: str) -> Concept:
+    concept = store.get(cid)
+    assert concept is not None, f"{cid} not in the store"
+    return concept
 
 
 def src(text="x = 1", context="the agent did a thing"):
-    return Source(snippet=text, context=context, project="~/p", session_id="s1", transcript_ref="t.jsonl:3")
+    return Source(
+        snippet=text, context=context, project="~/p", session_id="s1", transcript_ref="t.jsonl:3"
+    )
 
 
 def test_concept_id_normalizes_names():
-    assert concept_id("Dependency Injection") == concept_id("dependency-injection") == "dependency-injection"
-    with pytest.raises(ValueError):
+    assert (
+        concept_id("Dependency Injection")
+        == concept_id("dependency-injection")
+        == "dependency-injection"
+    )
+    with pytest.raises(ValueError, match="no letters or digits"):
         concept_id("  !! ")
 
 
 def test_add_and_reload():
     store = ConceptStore()
-    concept, outcome = store.add("Atomic file writes", "mechanism", "Write to temp, then rename.", src())
+    concept, outcome = store.add(
+        "Atomic file writes", "mechanism", "Write to temp, then rename.", src()
+    )
     assert outcome is Outcome.CREATED and concept.status is Status.NEW
     loaded = ConceptStore().get("atomic-file-writes")
     assert loaded == concept
@@ -40,17 +63,19 @@ def test_dismissed_concept_gets_no_new_source():
     store = ConceptStore()
     store.add("Idempotency", "pattern", "s", src("a"))
     store.set_status("idempotency", Status.DISMISSED)
-    concept, outcome = store.add("idempotency", "pattern", "s", src("b"))
+    _, outcome = store.add("idempotency", "pattern", "s", src("b"))
     assert outcome is Outcome.DISMISSED
-    assert [s.snippet for s in store.get("idempotency").sources] == ["a"]
+    assert [s.snippet for s in get(store, "idempotency").sources] == ["a"]
 
 
 def test_record_stores_a_batch_in_one_write():
     store = ConceptStore()
     store.add("Known", "pattern", "s", src("a"))
-    results = store.record([Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))])
+    results = store.record(
+        [Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))]
+    )
     assert [o for _, o in results] == [Outcome.CREATED, Outcome.ATTACHED]
-    assert len(store.get("known").sources) == 2
+    assert len(get(store, "known").sources) == 2
 
 
 def test_status_changes():
@@ -60,7 +85,7 @@ def test_status_changes():
     assert store.set_status("idempotency", Status.UNDERSTOOD).status is Status.UNDERSTOOD
     assert store.mark_seen("idempotency").status is Status.UNDERSTOOD  # never downgraded
     assert store.set_status("idempotency", "dismissed").status is Status.DISMISSED
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a valid Status"):
         store.set_status("idempotency", "bogus")
 
 
@@ -73,7 +98,7 @@ def test_failed_change_saves_nothing():
     store = ConceptStore()
     store.add("Idempotency", "pattern", "s", src())
     before = store.path.read_text()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a valid Status"):
         store.set_status("idempotency", "bogus")
     assert store.path.read_text() == before
 
@@ -108,7 +133,9 @@ def _writer(data_dir: str, worker: int, n: int) -> None:
 def test_parallel_writers_lose_nothing(data_dir):
     workers, per_worker = 8, 25
     ctx = mp.get_context("spawn")  # fresh interpreters, like separate detector processes
-    procs = [ctx.Process(target=_writer, args=(str(data_dir), w, per_worker)) for w in range(workers)]
+    procs = [
+        ctx.Process(target=_writer, args=(str(data_dir), w, per_worker)) for w in range(workers)
+    ]
     for p in procs:
         p.start()
     for p in procs:

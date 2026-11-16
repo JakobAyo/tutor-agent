@@ -12,8 +12,14 @@ EVENTS = batches.load("supervisor-loop")
 
 
 def item(**kw):
-    base = {"name": "Last-known-good rollback", "category": "Design patterns", "summary": "s",
-            "why_here": "w", "event_index": 3, "reuses_known": False}
+    base = {
+        "name": "Last-known-good rollback",
+        "category": "Design patterns",
+        "summary": "s",
+        "why_here": "w",
+        "event_index": 3,
+        "reuses_known": False,
+    }
     return {**base, **kw}
 
 
@@ -35,16 +41,28 @@ def test_schema_categories_are_the_curriculum():
 
 
 def test_parse_valid_items():
-    out = detector.parse({"concepts": [item(), item(name="Canary run", category="Testing", event_index=8)]}, EVENTS)
+    out = detector.parse(
+        {"concepts": [item(), item(name="Canary run", category="Testing", event_index=8)]}, EVENTS
+    )
     assert [c.name for c in out] == ["Last-known-good rollback", "Canary run"]
     assert out[0].event is EVENTS[3]
 
 
-@pytest.mark.parametrize("bad", [
-    item(event_index=999), item(event_index=-1), item(event_index=True), item(event_index="3"),
-    item(category="pattern"), item(name="  "), item(name="!!"), item(summary=None), item(reuses_known="no"),
-    "not an object",
-])
+@pytest.mark.parametrize(
+    "bad",
+    [
+        item(event_index=999),
+        item(event_index=-1),
+        item(event_index=True),
+        item(event_index="3"),
+        item(category="pattern"),
+        item(name="  "),
+        item(name="!!"),
+        item(summary=None),
+        item(reuses_known="no"),
+        "not an object",
+    ],
+)
 def test_invalid_item_is_dropped_others_kept(bad):
     out = detector.parse({"concepts": [bad, item(name="Kept")]}, EVENTS)
     assert [c.name for c in out] == ["Kept"]

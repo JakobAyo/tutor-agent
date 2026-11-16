@@ -27,7 +27,9 @@ def process(transcript: Path, session_id: str | None, *, dry_run: bool) -> int:
             log.info("skip %s: %s", where, reason)
             return 0
         if dry_run:
-            log.info("dry run %s, %d events:\n%s", where, len(batch.events), events.to_json(batch.events))
+            log.info(
+                "dry run %s, %d events:\n%s", where, len(batch.events), events.to_json(batch.events)
+            )
             return 0
         detect_and_store(batch, where)
         return 0
@@ -46,7 +48,7 @@ def detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
     before either stored its concepts, so the second one names the same ideas again, differently.
     Waiting is fine: this process is detached from the agent session.
     """
-    with open(paths.detect_lock_file(), "a") as lock:
+    with paths.detect_lock_file().open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)  # released when the file closes
         return _detect_and_store(batch, where)
 
@@ -68,13 +70,27 @@ def _detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
         if any(concept_id(e.name) == cid for e in entries):
             continue
         ev = cand.event
-        entries.append(Entry(cand.name, cand.category, cand.summary, Source(
-            snippet=detector.snippet(ev), context=cand.why_here, project=ev.project or None,
-            session_id=batch.session_id, transcript_ref=ev.transcript_ref, file=ev.file, kind=str(ev.kind),
-        )))
+        entries.append(
+            Entry(
+                cand.name,
+                cand.category,
+                cand.summary,
+                Source(
+                    snippet=detector.snippet(ev),
+                    context=cand.why_here,
+                    project=ev.project or None,
+                    session_id=batch.session_id,
+                    transcript_ref=ev.transcript_ref,
+                    file=ev.file,
+                    kind=str(ev.kind),
+                ),
+            )
+        )
 
     results = store.record(entries)
     new = [c for c, outcome in results if outcome is Outcome.CREATED]
-    log.info("detected %s: %s", where, ", ".join(f"{c.name} [{o}]" for c, o in results) or "nothing")
+    log.info(
+        "detected %s: %s", where, ", ".join(f"{c.name} [{o}]" for c, o in results) or "nothing"
+    )
     notifier.notify(new, muted=cfg.muted)
     return new

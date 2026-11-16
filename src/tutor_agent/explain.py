@@ -1,4 +1,4 @@
-""""What just happened": explain a session's latest turn on demand (F8, ADR 0029).
+""" "What just happened": explain a session's latest turn on demand (F8, ADR 0029).
 
 Read-only on transcripts and independent of detection: it never moves an offset. The latest
 turn starts at the last real prompt in the main transcript and includes the work of subagents
@@ -7,8 +7,10 @@ that wrote records after that prompt.
 
 import json
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from tutor_agent import paths, runner
 from tutor_agent.events import Event, EventMapper, Kind, is_prompt, text_of
@@ -90,9 +92,9 @@ def subagent_transcripts(transcript: Path) -> list[Path]:
     return sorted((transcript.parent / transcript.stem / "subagents").glob("agent-*.jsonl"))
 
 
-def _records(path: Path, start: int = 0):
+def _records(path: Path, start: int = 0) -> Iterator[dict[str, Any]]:
     """Parsed dict records from `start` on. Broken and partial lines are skipped."""
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         f.seek(start)
         if start:
             f.readline()  # most likely the middle of a line
@@ -125,7 +127,9 @@ def describe(transcript: Path, last_active: float) -> Session:
         tail *= 4
 
 
-def recent_sessions(limit: int = RECENT_SESSIONS, projects_dir: Path | None = None) -> list[Session]:
+def recent_sessions(
+    limit: int = RECENT_SESSIONS, projects_dir: Path | None = None
+) -> list[Session]:
     """The most recently active main sessions, newest first. Subagent activity counts too."""
     projects_dir = projects_dir or paths.claude_projects_dir()
     found: list[tuple[float, Path]] = []
@@ -147,7 +151,7 @@ def recent_sessions(limit: int = RECENT_SESSIONS, projects_dir: Path | None = No
 
 def latest_turn(session: Session) -> LatestTurn:
     """Events from the last prompt to the end, merged with subagent work from the same span."""
-    turn_records: list[tuple[dict, str]] = []
+    turn_records: list[tuple[dict[str, Any], str]] = []
     start_ts = ""
     for line, rec in enumerate(_records(session.transcript), 1):
         if is_prompt(rec):
@@ -169,12 +173,14 @@ def latest_turn(session: Session) -> LatestTurn:
     return LatestTurn(session, kept, dropped, sum(e.agent_id is not None for e in kept))
 
 
-def fit(events: list[Event], budget: int = TURN_BUDGET, max_events: int = MAX_TURN_EVENTS) -> tuple[list[Event], int]:
+def fit(
+    events: list[Event], budget: int = TURN_BUDGET, max_events: int = MAX_TURN_EVENTS
+) -> tuple[list[Event], int]:
     """Keep the prompt and the newest events that fit. Returns them and how many were dropped."""
     head = [e for e in events[:1] if e.kind is Kind.PROMPT]
     used = sum(len(e.content) for e in head)
     tail: list[Event] = []
-    for e in reversed(events[len(head):]):
+    for e in reversed(events[len(head) :]):
         if len(head) + len(tail) >= max_events or (tail and used + len(e.content) > budget):
             break
         tail.append(e)
@@ -185,8 +191,14 @@ def fit(events: list[Event], budget: int = TURN_BUDGET, max_events: int = MAX_TU
 
 def build_prompt(turn: LatestTurn, known: list[Concept]) -> str:
     s = turn.session
-    lines = [f"PROJECT: {s.project or 'unknown'}", "", "KNOWS (concepts the learner has seen or understood):",
-             *known_lines(known), "", "EVENTS:"]
+    lines = [
+        f"PROJECT: {s.project or 'unknown'}",
+        "",
+        "KNOWS (concepts the learner has seen or understood):",
+        *known_lines(known),
+        "",
+        "EVENTS:",
+    ]
     if turn.dropped_events:
         lines.append(f"[{turn.dropped_events} earlier events of this turn left out]")
     for e in turn.events:

@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
+from typing import Any
 
 SESSION = "11111111-2222-3333-4444-555555555555"
 
 
-def _base(rtype: str, agent_id: str | None = None, **extra) -> dict:
+def _base(rtype: str, agent_id: str | None = None, **extra) -> dict[str, Any]:
     rec = {
         "type": rtype,
         "sessionId": SESSION,
@@ -20,46 +21,54 @@ def _base(rtype: str, agent_id: str | None = None, **extra) -> dict:
     return rec
 
 
-def prompt(text: str, **kw) -> dict:
+def prompt(text: str, **kw) -> dict[str, Any]:
     return _base("user", message={"role": "user", "content": text}, **kw)
 
 
-def assistant(*blocks: dict, **kw) -> dict:
+def assistant(*blocks: dict[str, Any], **kw) -> dict[str, Any]:
     return _base("assistant", message={"role": "assistant", "content": list(blocks)}, **kw)
 
 
-def text(t: str) -> dict:
+def text(t: str) -> dict[str, Any]:
     return {"type": "text", "text": t}
 
 
-def thinking(t: str) -> dict:
+def thinking(t: str) -> dict[str, Any]:
     return {"type": "thinking", "thinking": t, "signature": "x"}
 
 
-def tool_use(tid: str, name: str, **inp) -> dict:
+def tool_use(tid: str, name: str, **inp) -> dict[str, Any]:
     return {"type": "tool_use", "id": tid, "name": name, "input": inp}
 
 
-def tool_result(tid: str, content: str, **kw) -> dict:
+def tool_result(tid: str, content: str, **kw) -> dict[str, Any]:
     return _base(
         "user",
-        message={"role": "user", "content": [{"type": "tool_result", "tool_use_id": tid, "content": content}]},
+        message={
+            "role": "user",
+            "content": [{"type": "tool_result", "tool_use_id": tid, "content": content}],
+        },
         toolUseResult={"stdout": content},
         **kw,
     )
 
 
-def other(rtype: str = "attachment") -> dict:
+def other(rtype: str = "attachment") -> dict[str, Any]:
     return _base(rtype, attachment={"type": "whatever"})
 
 
-def turn(n: int = 0, **kw) -> list[dict]:
+def turn(n: int = 0, **kw) -> list[dict[str, Any]]:
     """One realistic agent turn: prompt, reasoning, an edit, a command and its output."""
     return [
         prompt(f"add caching #{n}", **kw),
         other(),
         assistant(thinking(""), text("I'll use an LRU cache."), **kw),
-        assistant(tool_use(f"e{n}", "Edit", file_path="/home/u/proj/a.py", old_string="x", new_string="y"), **kw),
+        assistant(
+            tool_use(
+                f"e{n}", "Edit", file_path="/home/u/proj/a.py", old_string="x", new_string="y"
+            ),
+            **kw,
+        ),
         tool_result(f"e{n}", "ok", **kw),
         assistant(tool_use(f"b{n}", "Bash", command="pytest -q"), **kw),
         tool_result(f"b{n}", "3 passed", **kw),
@@ -67,9 +76,11 @@ def turn(n: int = 0, **kw) -> list[dict]:
     ]
 
 
-def write(path: Path, records: list[dict], *, append: bool = False, partial: str = "") -> Path:
+def write(
+    path: Path, records: list[dict[str, Any]], *, append: bool = False, partial: str = ""
+) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "a" if append else "w") as f:
+    with path.open("a" if append else "w") as f:
         for r in records:
             f.write(json.dumps(r) + "\n")
         f.write(partial)
