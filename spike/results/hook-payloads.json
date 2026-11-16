@@ -1,0 +1,90 @@
+[
+ {
+  "payload": {
+   "session_id": "bc8f146b-ae00-4d72-9308-167b5ef0d94b",
+   "transcript_path": "~/.claude/projects/<project-slug>/bc8f146b-ae00-4d72-9308-167b5ef0d94b.jsonl",
+   "cwd": "<scratch>/hookproj",
+   "prompt_id": "9ed4832b-c991-4107-8dec-032146563b73",
+   "permission_mode": "default",
+   "effort": {
+    "level": "medium"
+   },
+   "hook_event_name": "Stop",
+   "stop_hook_active": false,
+   "last_assistant_message": "I've launched the subagent to run `echo hi` and reply with its output. It's still running, so I don't have its result yet. I'll reply DONE once it finishes and reports back.",
+   "background_tasks": [
+    {
+     "id": "a42845fcf964cfac5",
+     "type": "subagent",
+     "status": "running",
+     "description": "Run echo hi",
+     "agent_type": "general-purpose"
+    }
+   ],
+   "session_crons": []
+  },
+  "env": {
+   "TUTOR_AGENT_INTERNAL": null,
+   "CLAUDE_CODE_ENTRYPOINT": "sdk-cli",
+   "CLAUDE_PROJECT_DIR": "<scratch>/hookproj"
+  },
+  "ts": 1794494183.8510282
+ },
+ {
+  "payload": {
+   "session_id": "bc8f146b-ae00-4d72-9308-167b5ef0d94b",
+   "transcript_path": "~/.claude/projects/<project-slug>/bc8f146b-ae00-4d72-9308-167b5ef0d94b.jsonl",
+   "cwd": "<scratch>/hookproj",
+   "prompt_id": "9ed4832b-c991-4107-8dec-032146563b73",
+   "permission_mode": "default",
+   "agent_id": "a42845fcf964cfac5",
+   "agent_type": "general-purpose",
+   "effort": {
+    "level": "medium"
+   },
+   "hook_event_name": "SubagentStop",
+   "stop_hook_active": false,
+   "agent_transcript_path": "~/.claude/projects/<project-slug>/bc8f146b-ae00-4d72-9308-167b5ef0d94b/subagents/agent-a42845fcf964cfac5.jsonl",
+   "last_assistant_message": "The output of `echo hi` is:\n\n```\nhi\n```",
+   "background_tasks": [
+    {
+     "id": "a42845fcf964cfac5",
+     "type": "subagent",
+     "status": "running",
+     "description": "Run echo hi",
+     "agent_type": "general-purpose"
+    }
+   ],
+   "session_crons": []
+  },
+  "env": {
+   "TUTOR_AGENT_INTERNAL": null,
+   "CLAUDE_CODE_ENTRYPOINT": "sdk-cli",
+   "CLAUDE_PROJECT_DIR": "<scratch>/hookproj"
+  },
+  "ts": 1794494184.9871037
+ },
+ {
+  "payload": {
+   "session_id": "bc8f146b-ae00-4d72-9308-167b5ef0d94b",
+   "transcript_path": "~/.claude/projects/<project-slug>/bc8f146b-ae00-4d72-9308-167b5ef0d94b.jsonl",
+   "cwd": "<scratch>/hookproj",
+   "prompt_id": "f1e5f66c-df34-454d-9403-3decafb8faa8",
+   "permission_mode": "default",
+   "effort": {
+    "level": "medium"
+   },
+   "hook_event_name": "Stop",
+   "stop_hook_active": false,
+   "last_assistant_message": "The subagent returned `hi`.\n\nDONE",
+   "background_tasks": [],
+   "session_crons": []
+  },
+  "env": {
+   "TUTOR_AGENT_INTERNAL": null,
+   "CLAUDE_CODE_ENTRYPOINT": "sdk-cli",
+   "CLAUDE_PROJECT_DIR": "<scratch>/hookproj"
+  },
+  "ts": 1794494186.7562597
+ }
+]

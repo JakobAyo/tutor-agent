@@ -1,0 +1,672 @@
+[
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:01:37.573Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "The next step is to keep using Claude Code normally, ideally in your other projects, and let detection run. The M3 check needs a day of that. You don't have to do anything in this repo for it.\n\nWhile it runs, keep an eye on two things:\n- **Near-duplicates:** the same idea stored twice under different names.\n- **Snippets on code-heavy turns:** whether they quote real code or still quote chat text.\n\n`jq` on `~/.local/share/tutor-agent/concepts.json` shows both.\n\nMeanwhile, I recommend starting M4 (the tutor pane) now rather than waiting. It doesn't depend on the outcome of the M3 check: if detection needs tuning, that's a prompt change in the detector, and M4 only reads the concept store. Having the pane soon also makes the review easier than reading JSON.\n\nThen, at the end of the day:\n1. Add the findings to the M6 log.\n2. Tick the M3 checkbox, or open a fix if snippets or duplicates are a problem.\n3. Update the status line in `CLAUDE.md`.\n\nShould I plan M4? I'd start with the Textual concept list and status actions, then add lesson generation and the cache.",
+  "transcript_ref": "<transcript>:154"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:05.592Z",
+  "kind": "prompt",
+  "file": null,
+  "content": "I want to implement all the milestones first and then i would test it an tweak it at the end",
+  "transcript_ref": "<transcript>:160"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:10.525Z",
+  "kind": "command",
+  "file": null,
+  "content": "ls src/tutor_agent tests docs/pedagogy docs/architecture docs/decisions && wc -l src/tutor_agent/*.py && cat pyproject.toml settings.toml 2>/dev/null; ls",
+  "transcript_ref": "<transcript>:162"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:10.581Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "docs/architecture:\ncomponents.md\ndata-storage.md\noverview.md\ntech-stack.md\n\ndocs/decisions:\n0000-template.md\n0001-docs-structure.md\n0002-observe-claude-code-only.md\n0003-claude-p-subscription-runtime.md\n0004-python.md\n0005-global-concept-memory.md\n0006-drop-socratic-quizzes-for-now.md\n0007-interaction-model.md\n0008-concept-memory-json.md\n0009-textual-tui.md\n0010-uv-and-python-312.md\n[... 1903 chars cut ...]\n\n[dependency-groups]\ndev = [\"pytest>=8\"]\n\n[tool.pytest.ini_options]\ntestpaths = [\"tests\"]\nmarkers = [\n    \"real: calls the real `claude` binary and spends subscription usage (run with `-m real`)\",\n    \"prompt: detection-quality checks on the M0 fixtures with the real model (run with `-m prompt`)\",\n]\naddopts = \"-m 'not real and not prompt'\"\nCLAUDE.md\ndocs\npyproject.toml\nspike\nsrc\ntests\nuv.lock",
+  "transcript_ref": "<transcript>:166"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:13.076Z",
+  "kind": "command",
+  "file": null,
+  "content": "cd ~/Projects/agents/tutor-agent/docs && cat milestones/overview.md milestones/m5-follow-ups.md milestones/m6-daily-use.md | head -80; cat pedagogy/teaching-strategy.md pedagogy/learner-model.md decisions/0009-textual-tui.md decisions/0017-lesson-cache.md decisions/0018-dismissed-status.md decisions/0016-model-per-job.md decisions/0012-stateless-follow-ups.md decisions/0007-interaction-model.md",
+  "transcript_ref": "<transcript>:173"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent/docs",
+  "timestamp": "2026-11-13T14:02:13.151Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "# Milestones Overview\n\n> **Responsibility:** The order of the milestones, how they depend on each other, and which requirements each one delivers.\n\nEach milestone leaves the tutor in a working, testable state. One file per milestone, with its goal, scope, and \"done when\" criteria.\n\n| # | Milestone | Delivers | Depends on |\n|---|---|---|---|\n[... 14192 chars cut ...]\n\n## Consequences\n- The agent session is never blocked or changed by the tutor.\n- I need a desktop notification daemon on Linux (`notify-send`).\n- Updated: [requirements/functional.md](../requirements/functional.md), [observation/triggers.md](../observation/triggers.md), [architecture/overview.md](../architecture/overview.md).",
+  "transcript_ref": "<transcript>:174"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent/docs",
+  "timestamp": "2026-11-13T14:02:16.175Z",
+  "kind": "command",
+  "file": null,
+  "content": "cd ~/Projects/agents/tutor-agent && cat src/tutor_agent/store.py src/tutor_agent/runner.py src/tutor_agent/settings.py src/tutor_agent/paths.py src/tutor_agent/cli.py docs/architecture/data-storage.md; cat ~/.local/share/tutor-agent/../../../.config/tutor-agent/settings.toml 2>/dev/null",
+  "transcript_ref": "<transcript>:184"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent/docs",
+  "timestamp": "2026-11-13T14:02:16.210Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "Exit code 1\n\"\"\"The concept memory: one JSON file, changed only under a file lock and replaced atomically.\n\nReaders never take the lock. `os.replace` swaps the file in one step, so a reader sees either\nthe old or the new version, never a half-written one. Writers take an exclusive `flock` on a\nseparate lock file, so two processes can't both read version N and overwrite each other's change.\n\"\"\"\n\n[... 9434 chars cut ...]\n\nSecrets: if a `claude setup-token` token is needed, it lives in `.env` in the data directory with permissions `600`. It is never kept in the tutor repo ([0019](../decisions/0019-token-in-data-directory.md)).",
+  "transcript_ref": "<transcript>:187"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent/docs",
+  "timestamp": "2026-11-13T14:02:17.977Z",
+  "kind": "command",
+  "file": null,
+  "content": "cd ~/Projects/agents/tutor-agent && sed -n 150,200p src/tutor_agent/store.py; cat src/tutor_agent/runner.py src/tutor_agent/settings.py",
+  "transcript_ref": "<transcript>:193"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:18.019Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "            concept = self._require(concepts, cid)\n            if concept.status is Status.NEW:\n                concept.status = Status.SEEN\n                concept.updated_at = now()\n            return concept\n\n    @staticmethod\n    def _require(concepts: dict[str, Concept], cid: str) -> Concept:\n        if cid not in concepts:\n            raise KeyError(f\"unknown concept: {cid}\")\n[... 7786 chars cut ...]\n    for key, value in raw.items():\n        expected = known[key].type\n        ok = isinstance(value, (int, float)) and not isinstance(value, bool) if expected is float else isinstance(value, expected)\n        if not ok:\n            raise SettingsError(f\"{path}: '{key}' must be {expected.__name__}, got {value!r}\")\n    return Settings(**raw)",
+  "transcript_ref": "<transcript>:197"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:20.685Z",
+  "kind": "command",
+  "file": null,
+  "content": "cat src/tutor_agent/detector.py tests/fake_claude.py tests/conftest.py; sed -n 1,40p tests/test_detector.py; cat docs/architecture/components.md docs/architecture/tech-stack.md | head -80",
+  "transcript_ref": "<transcript>:205"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:20.747Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "\"\"\"Find worth-knowing concepts in a batch with one `claude -p` call (ADR 0016, 0023, 0027).\n\nThe model returns names, summaries and an `event_index`. The snippet is cut from that event\nhere, never copied by the model (ADR 0013). The answer is validated item by item: a bad item is\nlogged and dropped, the rest is used.\n\"\"\"\n\nimport json\nfrom dataclasses import dataclass\n\n[... 19552 chars cut ...]\n| Packaging/tooling | uv (`uv_build` backend, `src/` layout), installed with `uv tool install .` | [0010](../decisions/0010-uv-and-python-312.md) |\n| Settings | `settings.toml` in the data directory, read with `tomllib` | [0024](../decisions/0024-settings-toml.md) |\n| Tests | pytest. A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1 |",
+  "transcript_ref": "<transcript>:210"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:33.608Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Confirmed the new order: M4 and M5 come first, with real-use testing and tuning deferred to M6. I'm starting M4 now.\n\n",
+  "transcript_ref": "<transcript>:221"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:36.160Z",
+  "kind": "edit",
+  "file": "~/.claude/projects/-home-user-Projects-agents-tutor-agent/memory/build-first-test-later.md",
+  "content": "---\nname: build-first-test-later\ndescription: User wants all tutor-agent milestones (M4, M5) implemented before any real-use testing; testing and tuning happen in M6\nmetadata:\n  type: feedback\n---\n\nImplement all remaining milestones first; don't stop to run real-use checks (like M3's \"day of real use\") between milestones. All testing and tweaking happens at the end, in M6.\n\n**Why:** the user said (2026-11-13) \"I want to implement all the milestones first and then I would test it and tweak it at the end.\"\n\n**How to apply:** after finishing a milestone, move on to the next one. Defer open \"real use\" checkboxes to M6 instead of blocking on them. Offline tests still run for each milestone.\n",
+  "transcript_ref": "<transcript>:222"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:37.611Z",
+  "kind": "command",
+  "file": null,
+  "content": "cd ~/.claude/projects/-home-user-Projects-agents-tutor-agent/memory/ && cat MEMORY.md 2>/dev/null; echo '- [Build first, test later](build-first-test-later.md) — implement M4–M5 before real-use testing; tuning in M6' >> MEMORY.md",
+  "transcript_ref": "<transcript>:224"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:37.659Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "Shell cwd was reset to ~/Projects/agents/tutor-agent",
+  "transcript_ref": "<transcript>:225"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:38.718Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv add textual 2>&1 | tail -3 && uv run python -c \"import textual; print(textual.__version__)\" && uv pip list 2>/dev/null | grep -i -E \"textual|asyncio|anyio\"",
+  "transcript_ref": "<transcript>:226"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:02:39.409Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": " + textual==8.2.8\n ~ tutor-agent==0.1.0 (from file://~/Projects/agents/tutor-agent)\n + typing-extensions==4.16.0\n8.2.8\ntextual           8.2.8",
+  "transcript_ref": "<transcript>:230"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:05.244Z",
+  "kind": "command",
+  "file": null,
+  "content": "cat src/tutor_agent/pipeline.py src/tutor_agent/log.py | head -80; sed -n 1,30p src/tutor_agent/paths.py; cat docs/pedagogy/curriculum.md | head -30; ls docs/decisions/0027-detection-rules.md && cat docs/decisions/0000-template.md",
+  "transcript_ref": "<transcript>:238"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:05.285Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "\"\"\"What `tutor detect` does with one transcript: read the new batch, pre-filter, detect, store,\nnotify.\n\nRuns detached from the hook, so every failure is logged here and nowhere else.\n\"\"\"\n\nfrom pathlib import Path\n\nfrom tutor_agent import detector, events, notifier, prefilter, reader, settings\nfrom tutor_agent.log import get_logger\n[... 4436 chars cut ...]\ndocs/decisions/0027-detection-rules.md\n# NNNN: <Decision title>\n\n- **Status:** Proposed | Accepted | Superseded by NNNN\n- **Date:** YYYY-MM-DD\n\n## Context\nWhat problem or force made this decision necessary?\n\n## Decision\nWhat we chose. One decision per ADR.\n\n## Alternatives considered\n- Option A: why it was rejected.\n\n## Consequences\nWhat gets easier or harder. Which docs were updated as a result.",
+  "transcript_ref": "<transcript>:242"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:06.395Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Now the lesson module (prompt, generation, cache):",
+  "transcript_ref": "<transcript>:252"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:07.348Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/src/tutor_agent/paths.py",
+  "content": "--- old\ndef log_file() -> Path:\n+++ new\ndef lessons_dir() -> Path:\n    return data_dir() / \"lessons\"\n\n\ndef log_file() -> Path:",
+  "transcript_ref": "<transcript>:253"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:22.489Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/src/tutor_agent/lessons.py",
+  "content": "\"\"\"Lessons: one `claude -p` call on the strong model per concept, cached on disk (ADR 0016, 0017, 0028).\n\nA lesson starts from the stored snippet (ADR 0013), so it works after the transcript is gone.\nThe cache keeps the source it was built from, because follow-ups need it as context (ADR 0012).\n\"\"\"\n\nimport json\nimport os\nimport re\nimport tempfile\nfrom dataclasses import asdict, dataclass\nfrom pathlib import Path\n\nfrom tutor_agent import paths, runner\nfrom tutor_agent.settings import Settings\nfrom tutor_agent.store import Concept, Source, now\n\nSYSTEM_PROMPT = \"\"\"You are a tutor. The learner watched a coding agent work and wants to understand\none concept behind what it did. They have a CS degree but little practical experience, and want\nsenior-level understanding. Skip basics. Be short and concrete: start from the code, not theory.\n\nWrite the lesson in Markdown with exactly these sections:\n\n## What the agent did\nQuote the relevant part of the snippet in a fenced code block (trim it to the lines that matter),\nthen say in one or two sentences what it does.\n\n## Why it did it\nThe problem this concept solves here, in this project.\n\n## The general concept\nWhat it is beyond this case, in plain terms. Name the pattern or mechanism and where else it shows up.\n\n## Trade-offs\nWhen NOT to use it, what it costs, and the common alternatives.\n\n## Read more\n2-3 links as a Markdown list: official documentation, well-known articles or book chapters.\nOnly give URLs you are confident exist; prefer stable official docs over blog posts.\n\nKeep the whole lesson under 500 words. Do not write code for the learner beyond the quoted snippet\nand at most one short illustrative example.\"\"\"\n\n\nclass LessonError(RuntimeError):\n    pass\n\n\n@dataclass(frozen=True)\nclass Lesson:\n    concept_id: str\n    text: str\n    model: str\n    generated_at: str\n    source: Source  # what the lesson was built from; follow-ups reuse it (ADR 0012)\n\n    @classmethod\n    def from_dict(cls, raw: dict) -> \"Lesson\":\n\n[... 3017 chars cut ...]",
+  "transcript_ref": "<transcript>:255"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:25.935Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv run python - <<'EOF'\nimport inspect\nfrom textual.widgets import OptionList, Markdown\nfrom textual.widgets.option_list import Option\nprint(inspect.signature(Option.__init__))\nprint([m for m in dir(OptionList) if not m.startswith('_') and m[0].islower()][:80])\nprint(inspect.signature(Markdown.update))\nprint([c for c in dir(OptionList) if c.startswith('Option')])\nfrom textual.app import App\nprint(inspect.signature(App.run_test))\nEOF",
+  "transcript_ref": "<transcript>:267"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:26.378Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "(self, prompt: 'VisualType', id: 'str | None' = None, disabled: 'bool' = False) -> 'None'\n[... 1424 chars cut ...]\n(self, markdown: 'str') -> 'AwaitComplete'\n['OptionHighlighted', 'OptionMessage', 'OptionSelected']\n(self, *, headless: 'bool' = True, size: 'tuple[int, int] | None' = (80, 24), tooltips: 'bool' = False, notifications: 'bool' = False, message_hook: 'Callable[[Message], None] | None' = None) -> 'AsyncGenerator[Pilot[ReturnType], None]'",
+  "transcript_ref": "<transcript>:271"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:27.535Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "Now the pane itself:",
+  "transcript_ref": "<transcript>:275"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:55.890Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/src/tutor_agent/tui.py",
+  "content": "\"\"\"The tutor pane (ADR 0009, 0028). Only `tutor tui` imports this module: Textual is a heavy import.\n\nLeft: the concept list, grouped by status. Right: the highlighted concept's cached lesson, or a\nshort card. Enter opens a lesson (marks it `seen`, generates it on first open). Lessons are\ngenerated in a worker thread, so the pane never freezes. The concept memory is polled once a\nsecond, so concepts the detector adds show up without a restart.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom rich.text import Text\nfrom textual import work\nfrom textual.app import App, ComposeResult\nfrom textual.binding import Binding\nfrom textual.containers import Horizontal, VerticalScroll\nfrom textual.widgets import Footer, Header, Markdown, OptionList\nfrom textual.widgets.option_list import Option\n\nfrom tutor_agent import lessons, settings\nfrom tutor_agent.log import get_logger\nfrom tutor_agent.store import Concept, ConceptStore, Status, StoreError\n\nGROUPS = (Status.NEW, Status.SEEN, Status.UNDERSTOOD, Status.DISMISSED)\n\n# Which status keys apply to which current status (learner model, ADR 0018).\nTRANSITIONS: dict[Status, set[Status]] = {\n    Status.UNDERSTOOD: {Status.NEW, Status.SEEN},\n    Status.SEEN: {Status.UNDERSTOOD},\n    Status.DISMISSED: {Status.NEW, Status.SEEN, Status.UNDERSTOOD},\n    Status.NEW: {Status.DISMISSED},  # undo a dismissal\n}\n\n\ndef project_name(concept: Concept) -> str:\n    project = concept.sources[-1].project if concept.sources else None\n    return project.rstrip(\"/\").rsplit(\"/\", 1)[-1] if project else \"?\"\n\n\ndef ordered(concepts: list[Concept], show_dismissed: bool) -> list[tuple[Status, list[Concept]]]:\n    \"\"\"Concepts grouped by status (`new` first), newest first inside a group.\"\"\"\n    out = []\n    for status in GROUPS:\n        if status is Status.DISMISSED and not show_dismissed:\n            continue\n        group = sorted((c for c in concepts if c.status is status), key=lambda c: c.created_at, reverse=True)\n        if group:\n\n[... 8812 chars cut ...]",
+  "transcript_ref": "<transcript>:276"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:56.855Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/src/tutor_agent/cli.py",
+  "content": "--- old\n    print(\"tutor tui: not implemented yet (M4)\")\n    return 0\n+++ new\n    from tutor_agent import tui\n\n    return tui.main()",
+  "transcript_ref": "<transcript>:278"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:59.086Z",
+  "kind": "command",
+  "file": null,
+  "content": "grep -n -i \"tui\\|textual\" tests/*.py; grep -n \"def \\|Source(\" tests/test_store.py | head -20",
+  "transcript_ref": "<transcript>:291"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:03:59.147Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "tests/test_cli.py:10:def test_tui_stub_runs(capsys):\ntests/test_cli.py:11:    assert cli.main([\"tui\"]) == 0\n10:def src(text=\"x = 1\", context=\"the agent did a thing\"):\n11:    return Source(snippet=text, context=context, project=\"~/p\", session_id=\"s1\", transcript_ref=\"t.jsonl:3\")\n14:def test_concept_id_normalizes_names():\n20:def test_add_and_reload():\n[... 104 chars cut ...]\n48:def test_record_stores_a_batch_in_one_write():\n56:def test_status_changes():\n67:def test_unknown_concept_raises():\n72:def test_failed_change_saves_nothing():\n81:def test_corrupt_file_is_never_overwritten():\n90:def test_no_temp_files_left_behind():\n98:def _writer(data_dir: str, worker: int, n: int) -> None:\n108:def test_parallel_writers_lose_nothing(data_dir):",
+  "transcript_ref": "<transcript>:295"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:00.553Z",
+  "kind": "command",
+  "file": null,
+  "content": "sed -n 1,25p tests/test_cli.py",
+  "transcript_ref": "<transcript>:297"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:00.581Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "import io\nimport json\n\nimport pytest\nimport transcripts as t\n\nfrom tutor_agent import cli\n\n\ndef test_tui_stub_runs(capsys):\n    assert cli.main([\"tui\"]) == 0\n    assert \"not implemented\" in capsys.readouterr().out\n\n\ndef test_hook_ignores_other_events(monkeypatch, data_dir):\n    monkeypatch.delenv(\"TUTOR_AGENT_INTERNAL\", raising=False)\n    stdin = io.StringIO('{\"hook_event_name\": \"Notification\"}')\n    monkeypatch.setattr(\"sys.stdin\", stdin)\n    assert cli.main([\"hook\"]) == 0\n    assert stdin.read() == \"\"\n\n\ndef test_hook_guard_exits_before_reading(monkeypatch):\n    monkeypatch.setenv(\"TUTOR_AGENT_INTERNAL\", \"1\")\n    stdin = io.StringIO(\"payload\")",
+  "transcript_ref": "<transcript>:298"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:05.532Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_cli.py",
+  "content": "--- old\ndef test_tui_stub_runs(capsys):\n    assert cli.main([\"tui\"]) == 0\n    assert \"not implemented\" in capsys.readouterr().out\n+++ new\ndef test_tui_reports_bad_settings(data_dir, capsys):\n    data_dir.mkdir(parents=True, exist_ok=True)\n    (data_dir / \"settings.toml\").write_text(\"nope = 1\\n\")\n    assert cli.main([\"tui\"]) == 1\n    assert \"unknown keys\" in capsys.readouterr().out\n\n\ndef test_hook_path_never_imports_textual():\n    # A fresh interpreter: the TUI tests in this process have imported Textual already (ADR 0009).\n    code = (\"import sys, io; sys.stdin = io.StringIO('{}'); from tutor_agent import cli; cli.main(['hook']); \"\n            \"assert 'textual' not in sys.modules, 'textual imported'\")\n    subprocess.run([sys.executable, \"-c\", code], check=True)",
+  "transcript_ref": "<transcript>:309"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:06.434Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_cli.py",
+  "content": "--- old\nimport io\nimport json\n\n+++ new\nimport io\nimport json\nimport subprocess\nimport sys\n",
+  "transcript_ref": "<transcript>:311"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:15.341Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_lessons.py",
+  "content": "import json\n\nimport pytest\n\nfrom tutor_agent import lessons, runner\nfrom tutor_agent.settings import Settings\nfrom tutor_agent.store import Concept, Source\n\nSNIPPET = 'def retry(fn):\\n    \"\"\"```inner fence```\"\"\"\\n    for delay in (1, 2, 4):\\n        ...'\n\n\ndef concept(**kw) -> Concept:\n    old = Source(snippet=\"old = 1\", context=\"first time\", project=\"/home/me/Projects/old\")\n    new = Source(snippet=SNIPPET, context=\"the agent wrapped a flaky call\", project=\"/home/me/Projects/api\",\n                 file=\"/home/me/Projects/api/client.py\")\n    base = dict(id=\"retry-with-backoff\", name=\"Retry with backoff\", category=\"Design patterns\",\n                summary=\"Retry a failing call with growing delays.\", sources=[old, new])\n    return Concept(**{**base, **kw})\n\n\ndef test_prompt_uses_most_recent_source_and_a_safe_fence():\n    c = concept()\n    prompt = lessons.build_prompt(c, lessons.lesson_source(c))\n    assert \"CONCEPT: Retry with backoff\" in prompt\n    assert \"FILE: /home/me/Projects/api/client.py\" in prompt\n    assert \"WHY IT CAME UP: the agent wrapped a flaky call\" in prompt\n    assert f\"````\\n{SNIPPET}\\n````\" in prompt  # 4 backticks: the snippet holds a 3-backtick run\n    assert \"old = 1\" not in prompt\n\n\ndef test_concept_without_source_cannot_be_taught():\n    with pytest.raises(lessons.LessonError):\n        lessons.lesson_source(concept(sources=[]))\n\n\ndef test_generate_uses_the_lesson_model(fake_claude):\n    lesson = lessons.generate(concept(), Settings(lesson_model=\"opus\"))\n    argv = fake_claude.record[\"argv\"]\n    assert argv[argv.index(\"--model\") + 1] == \"opus\"\n    assert \"--json-schema\" not in argv\n    assert \"## What the agent did\" in argv[argv.index(\"--system-prompt\") + 1]\n    assert lesson.text.startswith(\"echo: CONCEPT: Retry with backoff\")\n    assert lesson.model == \"opus\"\n    assert lesson.source.snippet == SNIPPET\n\n\ndef test_failed_call_raises(fake_claude):\n    fake_claude.mode(\"fail\")\n    with pytest.raises(runner.ClaudeError):\n\n[... 816 chars cut ...]",
+  "transcript_ref": "<transcript>:313"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:17.935Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/src/tutor_agent/lessons.py",
+  "content": "--- old\n        return self.path(cid).exists()\n+++ new\n        return self.get(cid) is not None",
+  "transcript_ref": "<transcript>:327"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:34.519Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_tui.py",
+  "content": "\"\"\"The tutor pane, driven headless through Textual's pilot. The fake `claude` answers lessons.\"\"\"\n\nimport asyncio\n\nfrom textual.widgets import Markdown, OptionList\n\nfrom tutor_agent import lessons\nfrom tutor_agent.settings import Settings\nfrom tutor_agent.store import ConceptStore, Entry, Source, Status\nfrom tutor_agent.tui import TutorApp\n\n\ndef seed(*names: str) -> ConceptStore:\n    store = ConceptStore()\n    store.record([Entry(n, \"Design patterns\", f\"About {n}.\",\n                        Source(snippet=f\"code for {n}\", context=\"ctx\", project=\"/home/me/Projects/api\"))\n                  for n in names])\n    return store\n\n\ndef run(test, store=None, size=(120, 40)):\n    \"\"\"Run `test(pilot, app)` inside a headless app.\"\"\"\n    async def main():\n        app = TutorApp(store=store or ConceptStore(), cfg=Settings(), poll_s=0.05)\n        async with app.run_test(size=size) as pilot:\n            await pilot.pause()\n            await test(pilot, app)\n    asyncio.run(main())\n\n\ndef options(app) -> list[str]:\n    ol = app.query_one(OptionList)\n    return [str(ol.get_option_at_index(i).prompt).split(\"\\n\")[0] for i in range(ol.option_count)]\n\n\ndef shown(app) -> str:\n    return app.query_one(Markdown).source\n\n\nasync def settle(pilot, app):\n    await app.workers.wait_for_complete()\n    await pilot.pause()\n\n\ndef test_empty_memory():\n    async def t(pilot, app):\n        assert \"No concepts yet\" in shown(app)\n    run(t)\n\n\ndef test_list_is_grouped_new_first_and_hides_dismissed():\n    store = seed(\"Alpha\", \"Beta\", \"Gamma\", \"Delta\")\n    store.set_status(\"beta\", Status.UNDERSTOOD)\n    store.set_status(\"gamma\", Status.DISMISSED)\n    store.set_status(\"delta\", Status.SEEN)\n\n    async def t(pilot, app):\n        assert options(app) == [\"NEW (1)\", \"Alpha\", \"SEEN (1)\", \"Delta\", \"UNDERSTOOD (1)\", \"Beta\"]\n        await pilot.press(\"h\")\n        assert options(app)[-2:] == [\"DISMISSED (1)\", \"Gamma\"]\n    run(t, store)\n\n\ndef test_highlight_shows_card_without_a_call(fake_claude):\n\n[... 3609 chars cut ...]",
+  "transcript_ref": "<transcript>:329"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:35.563Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv run pytest tests/test_lessons.py tests/test_tui.py tests/test_cli.py -x -q 2>&1 | tail -30",
+  "transcript_ref": "<transcript>:331"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:42.145Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "........................                                                 [100%]\n24 passed in 6.10s",
+  "transcript_ref": "<transcript>:337"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:45.768Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "All 24 pass. Let me tidy the navigation in one test, then run the full suite:",
+  "transcript_ref": "<transcript>:343"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:49.327Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_tui.py",
+  "content": "--- old\n        await pilot.press(\"enter\")  # Beta is newest... both share a timestamp; open whatever is first\n        first = app.highlighted_id()\n        await settle(pilot, app)\n        assert fake_claude.calls == 1\n        assert store.get(first).status is Status.SEEN\n        assert \"echo: CONCEPT:\" in shown(app)\n        assert lessons.LessonCache().get(first) is not None\n\n        await pilot.press(\"down\", \"down\")  # past the SEEN header to the other concept and back\n        await pilot.press(\"up\", \"up\")\n        while app.highlighted_id() != first:\n            await pilot.press(\"up\")\n        await pilot.press(\"enter\")\n+++ new\n        first = app.highlighted_id()\n        await pilot.press(\"enter\")\n        await settle(pilot, app)\n        assert fake_claude.calls == 1\n        assert store.get(first).status is Status.SEEN\n        assert \"echo: CONCEPT:\" in shown(app)\n        assert lessons.LessonCache().get(first) is not None\n\n        other = \"beta\" if first == \"alpha\" else \"alpha\"\n        app.highlight(other)\n        assert \"Enter\" in shown(app)  # the other one has no lesson yet\n        app.highlight(first)\n        await pilot.press(\"enter\")",
+  "transcript_ref": "<transcript>:344"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:04:49.979Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv run pytest -q 2>&1 | tail -5",
+  "transcript_ref": "<transcript>:346"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:00.914Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "........................................................................ [ 47%]\n........................................................................ [ 95%]\n.......                                                                  [100%]\n151 passed, 7 deselected in 10.54s",
+  "transcript_ref": "<transcript>:352"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:05.377Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "The full suite passes (151 tests). Next I'll add a real lesson-quality check under the `prompt` marker, and take a headless screenshot to check the layout.",
+  "transcript_ref": "<transcript>:358"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:06.061Z",
+  "kind": "command",
+  "file": null,
+  "content": "sed -n 1,40p tests/test_detect_prompt.py",
+  "transcript_ref": "<transcript>:359"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:06.093Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "\"\"\"Detection quality on the M0 fixture batches with the real model. Six Haiku calls (about $0.03\nat list price), so it only runs with `-m prompt`.\n\nThe model is not deterministic, so each batch checks loosely: at least one concept matches the\nideas the M0 spike runs found (Haiku and Sonnet, spike/results/detection-runs.json), and no\nconcept is a basic.\n\"\"\"\n\nimport re\nimport shutil\n\nimport batches\n[... 854 chars cut ...]\n    r\"comments?|renam(e|ing)|formatting|imports?)\\b\",\n    re.I,\n)\n\n\ndef detect(name: str, known: list[str]):\n    return detector.detect(batches.load(name), known, Settings())\n\n\n@pytest.mark.parametrize(\"name\", sorted(EXPECTED))\ndef test_finds_expected_concepts_and_no_basics(name):\n    found = detect(name, [])",
+  "transcript_ref": "<transcript>:360"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:12.957Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/tests/test_lesson_prompt.py",
+  "content": "\"\"\"Lesson quality with the real lesson model (Sonnet by default). One call, so it only runs\nwith `-m prompt`. Checks the M4 \"done when\" item: the lesson quotes the real snippet, then\ngeneralizes, covers trade-offs, and gives 2-3 links.\n\"\"\"\n\nimport re\nimport shutil\n\nimport batches\nimport pytest\n\nfrom tutor_agent import detector, lessons\nfrom tutor_agent.settings import Settings\nfrom tutor_agent.store import Concept, Source\n\npytestmark = [pytest.mark.prompt, pytest.mark.skipif(shutil.which(\"claude\") is None, reason=\"claude not installed\")]\n\nSECTIONS = (\"## What the agent did\", \"## Why it did it\", \"## The general concept\", \"## Trade-offs\", \"## Read more\")\n\n\ndef test_lesson_has_the_structure_and_quotes_the_snippet():\n    event = batches.load(\"supervisor-loop\")[3]  # the edit of supervisor.py\n    snippet = detector.snippet(event)\n    concept = Concept(\n        id=\"supervisor-with-last-known-good-rollback\", name=\"Supervisor with last-known-good rollback\",\n        category=\"Design patterns\",\n        summary=\"A parent process restarts a child and falls back to the last version that worked.\",\n        sources=[Source(snippet=snippet, context=\"The agent wrote a loop that restarts the harness \"\n                        \"and rolls back to the last good commit when the new one fails.\",\n                        project=\"~/Projects/project-d\", file=event.file)],\n    )\n    text = lessons.generate(concept, Settings()).text\n\n    positions = [text.find(s) for s in SECTIONS]\n    assert all(p >= 0 for p in positions), f\"missing sections in:\\n{text}\"\n    assert positions == sorted(positions), \"sections out of order\"\n\n    quoted = text[positions[0]:positions[1]]\n    code_lines = {line.strip() for line in snippet.splitlines() if len(line.strip()) > 15}\n    assert any(line in quoted for line in code_lines), \"no line of the real snippet is quoted\"\n\n    links = re.findall(r\"https?://\\S+\", text[positions[4]:])\n    assert 2 <= len(links) <= 3, links\n    assert len(text.split()) < 700\n",
+  "transcript_ref": "<transcript>:365"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:14.260Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv run pytest -m prompt tests/test_lesson_prompt.py -q 2>&1 | tail -15; grep \"claude ok\" ~/.local/share/tutor-agent/tutor.log | tail -1",
+  "transcript_ref": "<transcript>:367"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:26.983Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": ".                                                                        [100%]\n1 passed in 12.54s\n2026-11-13 15:00:56,746 4662 INFO claude ok model=haiku ms=8822 cost_usd=0.00091896",
+  "transcript_ref": "<transcript>:373"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:30.390Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "The real Sonnet lesson passes the structure check. I'd like to read a real lesson and see the layout, so here's one throwaway run in a temporary data directory:",
+  "transcript_ref": "<transcript>:379"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:34.696Z",
+  "kind": "command",
+  "file": null,
+  "content": "S=/tmp/claude-1000/-home-user-Projects-agents-tutor-agent/9bb72d88-d613-450c-9fe6-4f390c62762f/scratchpad && mkdir -p $S/m4data && cp ~/.local/share/tutor-agent/concepts.json $S/m4data/ && cat > $S/shot.py <<'EOF'\nimport asyncio, sys\nfrom tutor_agent.tui import TutorApp\nfrom tutor_agent import lessons\nasync def main(out):\n    app = TutorApp(poll_s=0.5)\n    async with app.run_test(size=(140, 45)) as pilot:\n        await pilot.pause()\n        app.highlight(\"installed-artifact-vs-source-checkout\")\n        await pilot.press(\"enter\")\n        await app.workers.wait_for_complete()\n        await pilot.pause(0.5)\n        app.save_screenshot(out)\n    print(lessons.LessonCache().get(\"installed-artifact-vs-source-checkout\").text)\nasyncio.run(main(sys.argv[1]))\nEOF\nTUTOR_AGENT_DATA_DIR=$S/m4data uv run python $S/shot.py $S/m4.svg && which rsvg-convert magick 2>/dev/null",
+  "transcript_ref": "<transcript>:380"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:46.268Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "## What the agent did\n\n```\n**Installed artifact vs source checkout**: why the M2 build kept running until you reinstalled.\n```\n\nThe agent explained that the tutor kept running an old build of itself. Edits in the repo had no effect until the package was reinstalled. That explains why its claims about the code didn't match what the tool actually did.\n\n## Why it did it\n\n[... 2465 chars cut ...]\n- [pip documentation: Editable installs](https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs)\n- [Docker docs: Building best practices](https://docs.docker.com/build/building/best-practices/)\n/usr/bin/rsvg-convert\n/usr/bin/magick",
+  "transcript_ref": "<transcript>:384"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:50.515Z",
+  "kind": "command",
+  "file": null,
+  "content": "S=/tmp/claude-1000/-home-user-Projects-agents-tutor-agent/9bb72d88-d613-450c-9fe6-4f390c62762f/scratchpad && rsvg-convert -w 1600 $S/m4.svg -o $S/m4.png && echo ok",
+  "transcript_ref": "<transcript>:390"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:50.717Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": "ok",
+  "transcript_ref": "<transcript>:391"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:05:58.556Z",
+  "kind": "reasoning",
+  "file": null,
+  "content": "The pane now shows a real lesson, but its newest snippet is prose, so the same snippet problem from the M6 log is visible there. Next I'll write an ADR for the M4 choices and update the storage, components, M3, M4, M6 and status docs.\n\n",
+  "transcript_ref": "<transcript>:415"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:09.942Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/decisions/0028-lessons-and-tutor-pane.md",
+  "content": "# 0028: Lesson format, lesson cache files, and tutor pane behaviour\n\n- **Status:** Accepted\n- **Date:** 2026-11-13\n\n## Context\nM4 builds the tutor pane and lessons. [0017](0017-lesson-cache.md) says lessons are cached per concept, but not in what form. [0009](0009-textual-tui.md) picks Textual, but not how the pane notices new concepts or when it spends an LLM call. Follow-ups in M5 need the lesson and the source it was built from ([0012](0012-stateless-follow-ups.md)).\n\n## Decision\n- **Lesson call:** one plain-text `claude -p` call on `lesson_model` (no `--json-schema`). The prompt holds the concept's name, category, summary, and the **most recent source** (project, file, context, snippet). The snippet sits in a backtick fence longer than any run inside it. The system prompt fixes five Markdown sections in the [teaching-strategy](../pedagogy/teaching-strategy.md) order, at most 500 words, and 2–3 links it is confident exist.\n- **Lesson cache:** `lessons/<concept_id>.json` in the data directory, one file per concept, with `text`, `model`, `generated_at`, and a copy of the **source** the lesson was built from. Written to a temp file and swapped in with `os.replace`. A file that can't be parsed counts as missing and is replaced on the next open. Only the pane writes it, so there is no lock.\n- **When the pane calls the model:** highlighting a concept shows its cached lesson, or a card (summary, context, \"press Enter\") if there is none. It never makes a call. **Enter** opens the lesson: `new` becomes `seen`, and the lesson is generated if it isn't cached. **r** regenerates it.\n- **Responsiveness:** the call runs in a Textual worker thread. The lesson area shows a loading state, and the list and keys keep working. A failed call is logged and shown under the card, and nothing is cached.\n- **New concepts:** the pane checks the concept file's mtime and size once a second and reloads when they change. Readers never take the store lock, so the detector is never slowed down.\n\n[... 1370 chars cut ...]",
+  "transcript_ref": "<transcript>:416"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:12.231Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/architecture/data-storage.md",
+  "content": "--- old\n| **Lesson cache** | Generated lesson text per concept | Generated on first open, regenerated only on request. Also used as context for follow-ups ([0017](../decisions/0017-lesson-cache.md)) |\n+++ new\n| **Lesson cache** | Per concept: lesson text, model, time, and the source the lesson was built from | `lessons/<concept_id>.json`, written atomically by the pane only. Generated on first open, regenerated only on request. Also used as context for follow-ups ([0017](../decisions/0017-lesson-cache.md), [0028](../decisions/0028-lessons-and-tutor-pane.md)) |",
+  "transcript_ref": "<transcript>:418"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:13.353Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/architecture/data-storage.md",
+  "content": "--- old\n`offsets/` (transcript offsets and their locks), `settings.toml`\n+++ new\n`offsets/` (transcript offsets and their locks), `lessons/` (lesson cache), `settings.toml`",
+  "transcript_ref": "<transcript>:420"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:18.048Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/architecture/components.md",
+  "content": "--- old\n| **Tutor pane** | TUI for browsing concepts and reading lessons | Textual app ([0009](../decisions/0009-textual-tui.md)), uses the store and the runner. Shows cached lessons and regenerates them only on request ([0017](../decisions/0017-lesson-cache.md)). Keeps the follow-up thread per lesson and rebuilds the full prompt on every question ([0012](../decisions/0012-stateless-follow-ups.md)) |\n+++ new\n| **Lessons** | Write a lesson for a concept and cache it | `lessons.generate(concept, settings) -> Lesson`: one plain-text call on the strong model, built from the most recent source. `LessonCache` get/put, one file per concept ([0017](../decisions/0017-lesson-cache.md), [0028](../decisions/0028-lessons-and-tutor-pane.md)) |\n| **Tutor pane** | TUI for browsing concepts and reading lessons | `tutor tui`, Textual app in `tui.py` ([0009](../decisions/0009-textual-tui.md)). Highlight shows the cached lesson or a card (no call), Enter opens (marks `seen`, generates once), `r` regenerates. Calls run in a worker thread; the concept file is polled once a second. Status keys `u`/`s`/`d`/`n`, `h` shows dismissed ([0028](../decisions/0028-lessons-and-tutor-pane.md)). Keeps the follow-up thread per lesson and rebuilds the full prompt on every question ([0012](../decisions/0012-stateless-follow-ups.md)) |",
+  "transcript_ref": "<transcript>:422"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:19.704Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/architecture/tech-stack.md",
+  "content": "--- old\n| TUI | Textual | [0009](../decisions/0009-textual-tui.md) |\n+++ new\n| TUI | Textual 8.2 (the only runtime dependency, imported only by `tutor tui`) | [0009](../decisions/0009-textual-tui.md), [0028](../decisions/0028-lessons-and-tutor-pane.md) |",
+  "transcript_ref": "<transcript>:424"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:21.152Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/milestones/m3-detection.md",
+  "content": "--- old\nOpen: the day of real use (second item) needs the refreshed tool (`uv tool install --force --reinstall .`).\n+++ new\nOpen: the day of real use (second item). Moved to M6: all milestones are built first, then tested and tuned in real use together. First findings are in the [M6 log](m6-daily-use.md#log).",
+  "transcript_ref": "<transcript>:426"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:27.485Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/milestones/m4-tutor-pane.md",
+  "content": "--- old\n- [ ] Every status change from the [learner model](../pedagogy/learner-model.md) works and is saved.\n- [ ] A lesson quotes the real snippet, then generalizes, covers trade-offs, and gives 2–3 links.\n- [ ] Reopening a lesson makes no LLM call.\n- [ ] The pane stays responsive while a lesson is generated and while the detector writes.\n\n+++ new\n- [x] Every status change from the [learner model](../pedagogy/learner-model.md) works and is saved.\n- [x] A lesson quotes the real snippet, then generalizes, covers trade-offs, and gives 2–3 links.\n- [x] Reopening a lesson makes no LLM call.\n- [x] The pane stays responsive while a lesson is generated and while the detector writes.\n\n## Results (2026-11-13)\nDecision: [0028](../decisions/0028-lessons-and-tutor-pane.md) (lesson call, cache files, when the pane calls the model, polling, status keys).\n\n| Item | Evidence |\n|---|---|\n| Status changes | `tests/test_tui.py`: `u`, `s`, `d`, `n` change and save the status, invalid moves change nothing, dismissed is hidden until `h`, Enter moves `new` to `seen` |\n| Lesson quality | `uv run pytest -m prompt tests/test_lesson_prompt.py` (one Sonnet call, ~12 s): five sections in order, a line of the real snippet quoted, 2–3 links, under 700 words. A lesson on a real concept read well, but quoted chat text because that concept's snippet was chat text (M6 log) |\n| No call on reopen | `tests/test_tui.py`: open, move away, reopen gives one call in total; `r` makes a second |\n| Responsive | `tests/test_tui.py`: during a hanging call the loading state shows and keys still change statuses; a concept written by another store instance appears without a restart |\n| Offline tests | `uv run pytest`: 151 tests |\n\nNot checked: the links in real lessons can be made up (no tools). Checked in M6.\n",
+  "transcript_ref": "<transcript>:428"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:30.253Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/docs/milestones/m6-daily-use.md",
+  "content": "--- old\nStill to check: near-duplicates over the day, snippets on code-heavy turns.\n\n+++ new\nStill to check: near-duplicates over the day, snippets on code-heavy turns.\n\n### 2026-11-13: first real lesson (M4)\nLesson for \"Installed artifact vs source checkout\" (Sonnet, one call). The general concept, trade-offs and links read well. \"What the agent did\" quoted a line of chat text, because the concept's most recent source was an assistant summary, and the \"why\" part then guessed at a story around it. Same root cause as the prose-snippet finding above.\n\nStill to check: whether the lesson links exist (the model has no tools to check them).\n",
+  "transcript_ref": "<transcript>:430"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:32.401Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/CLAUDE.md",
+  "content": "--- old\nM3 detection implemented (detector, notifier, `ConceptStore.record`; ADR 0027), prompt tests pass on the M0 fixtures; open: a day of real use (see `docs/milestones/m3-detection.md`).\n+++ new\nM3 detection implemented (detector, notifier, `ConceptStore.record`; ADR 0027), prompt tests pass on the M0 fixtures. M4 tutor pane done (`tutor tui`, lessons with cache; ADR 0028). Plan: build M5 next, then all real-use testing and tuning in M6 (including M3's open \"day of real use\", see `docs/milestones/m6-daily-use.md`).",
+  "transcript_ref": "<transcript>:432"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:34.247Z",
+  "kind": "edit",
+  "file": "~/Projects/agents/tutor-agent/CLAUDE.md",
+  "content": "--- old\n- `uv run pytest -m prompt`: detection quality on the five M0 fixtures (6 Haiku calls, about $0.04).\n+++ new\n- `uv run pytest -m prompt`: detection quality on the five M0 fixtures (6 Haiku calls, about $0.04) and lesson quality (1 Sonnet call).\n- `tutor tui`: the tutor pane (Enter opens a lesson, `u`/`s`/`d`/`n` change status, `r` regenerates, `h` shows dismissed).",
+  "transcript_ref": "<transcript>:434"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:37.229Z",
+  "kind": "command",
+  "file": null,
+  "content": "uv run pytest -q 2>&1 | tail -2 && git status --short",
+  "transcript_ref": "<transcript>:446"
+ },
+ {
+  "session_id": "9bb72d88-d613-450c-9fe6-4f390c62762f",
+  "agent_id": null,
+  "project": "~/Projects/agents/tutor-agent",
+  "timestamp": "2026-11-13T14:06:48.400Z",
+  "kind": "tool_result",
+  "file": null,
+  "content": ".......                                                                  [100%]\n151 passed, 8 deselected in 10.73s\n M CLAUDE.md\n M docs/architecture/components.md\n M docs/architecture/data-storage.md\n M docs/architecture/tech-stack.md\n M docs/milestones/m3-detection.md\n M docs/milestones/m4-tutor-pane.md\n M docs/milestones/m6-daily-use.md\n M pyproject.toml\n M src/tutor_agent/cli.py\n M src/tutor_agent/paths.py\n M tests/test_cli.py\n M uv.lock\n?? docs/decisions/0028-lessons-and-tutor-pane.md\n?? src/tutor_agent/lessons.py\n?? src/tutor_agent/tui.py\n?? tests/test_lesson_prompt.py\n?? tests/test_lessons.py\n?? tests/test_tui.py",
+  "transcript_ref": "<transcript>:450"
+ }
+]

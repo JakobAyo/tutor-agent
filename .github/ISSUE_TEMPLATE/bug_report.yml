@@ -1,0 +1,40 @@
+name: Bug report
+description: Something doesn't work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. tutor install
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Relevant log
+      description: From `~/.local/share/tutor-agent/tutor.log`. Remove anything private (paths, code, prompts).
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: tutor-agent version
+      placeholder: "uv tool list | grep tutor-agent"
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "Arch Linux, Python 3.12, Claude Code 2.1.x"
+    validations:
+      required: true

@@ -1,0 +1,63 @@
+# PR rules that keep the history clean enough for automatic versioning:
+#  - the PR title is a Conventional Commit (it becomes the squash-commit message on develop,
+#    and release-please reads those messages to pick the next version and write the CHANGELOG)
+#  - only develop, release-please and hotfix branches may target main
+name: PR policy
+
+#
+# Uses `pull_request`, not `pull_request_target`: the latter always runs the default branch's
+# copy of the workflow (main), and is blocked by default in public repos from 2026-12-02.
+# These checks only read PR metadata, so the read-only token is all they need.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches: [develop, main]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    name: Conventional PR title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@2252a14e810aa9b85c2d560bd7070c802206ecf6 # v6.1.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            docs
+            deps
+            test
+            build
+            ci
+            style
+            chore
+            revert
+          requireScope: false
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: |
+            The subject "{subject}" in "{title}" must start with a lowercase letter.
+
+  source-branch:
+    name: Allowed source branch for main
+    if: github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Only develop, release-please--* or hotfix/* may merge into main
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        run: |
+          if [[ "$SAME_REPO" != "true" ]]; then
+            echo "::error::PRs into main must come from this repository (open forks' PRs against develop)."
+            exit 1
+          fi
+          case "$HEAD_REF" in
+            develop|release-please--*|hotfix/*) echo "OK: $HEAD_REF -> main" ;;
+            *) echo "::error::'$HEAD_REF' can't target main. Open the PR against develop instead."; exit 1 ;;
+          esac

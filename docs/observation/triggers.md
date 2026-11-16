@@ -2,4 +2,21 @@
 
 > **Responsibility:** Which observed events trigger a teaching moment, and how they're filtered.
 
-_TBD_
+## When detection runs
+- **Automatic:** once per finished agent turn (the hook fires) on the new transcript events ([0007](../decisions/0007-interaction-model.md)).
+- **Pre-filter (no LLM call):** skip the turn if it contains no code edits, no commands, and no substantial reasoning. "Substantial" means at least 600 chars of agent text (`reasoning` events) in the batch; the user's prompt doesn't count. All five M0 batches pass. Skips are logged.
+- **On demand:** from the tutor pane ("explain what just happened").
+
+## The "worth knowing" filter
+A concept triggers a notification only if **both** are true:
+
+1. **New to me:** it is not in the concept memory with any status, and it hasn't been dismissed.
+2. **Reusable understanding:** knowing it will help me understand *future* code, not just this line. For example:
+   - **Yes:** design patterns (repository, dependency injection), architecture (event sourcing, CQRS), concurrency models, testing strategies (mocking vs fakes), tooling internals (how lockfiles work), infra concepts (connection pooling, migrations), language mechanisms (Python decorators, TS generics, Rust ownership), trade-offs (why a queue instead of a direct call).
+   - **No:** basic syntax (`for` loops, `if`, assignment), single API calls with no idea behind them, trivial renames and formatting.
+
+## Concept identity
+- Concepts are named at a general level ("dependency injection", not "the `get_db` function").
+- The detector receives the list of known concept names (every status, dismissed included), so it reuses an existing name instead of creating a near-duplicate.
+- A candidate marked as known whose name matches no known concept is dropped, not stored ([0027](../decisions/0027-detection-rules.md)).
+- At most 3 concepts per batch, each in one of the [curriculum](../pedagogy/curriculum.md) categories.

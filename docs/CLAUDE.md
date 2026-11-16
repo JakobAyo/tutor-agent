@@ -9,6 +9,7 @@ Each folder has one responsibility. Each file covers one topic. Read only the fo
 | [pedagogy/](pedagogy/) | **How** does the tutor teach and measure learning? |
 | [observation/](observation/) | **How** does the tutor watch other coding agents? |
 | [architecture/](architecture/) | **How** is the tutor built (components, data, flow)? |
+| [milestones/](milestones/) | **When** is what built, and when is each step done? Start at [overview](milestones/overview.md). |
 | [decisions/](decisions/) | **Which** choices were made, when, and why (ADRs)? |
 | [glossary/](glossary/) | **What** do our terms mean? |
 

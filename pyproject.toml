@@ -1,0 +1,114 @@
+[project]
+name = "tutor-agent"
+version = "0.1.0"
+description = "A personal tutor that watches Claude Code sessions and teaches the concepts behind them."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Jakob Ayo" }]
+requires-python = ">=3.12"
+keywords = ["claude-code", "tutor", "learning", "ai-agents", "tui"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Education",
+    "Topic :: Software Development",
+    "Typing :: Typed",
+]
+dependencies = [
+    "textual>=8.2.8",
+]
+
+[project.urls]
+Homepage = "https://github.com/JakobAyo/tutor-agent"
+Issues = "https://github.com/JakobAyo/tutor-agent/issues"
+Changelog = "https://github.com/JakobAyo/tutor-agent/blob/main/CHANGELOG.md"
+
+[project.scripts]
+tutor = "tutor_agent.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=6",
+    "ruff>=0.14",
+    "mypy>=1.18",
+    "pre-commit>=4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "real: calls the real `claude` binary and spends subscription usage (run with `-m real`)",
+    "prompt: detection-quality checks on the M0 fixtures with the real model (run with `-m prompt`)",
+]
+addopts = "-m 'not real and not prompt' --strict-markers"
+
+[tool.coverage.run]
+source = ["tutor_agent"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["spike"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "B",        # bugbear: likely bugs
+    "UP",       # pyupgrade: modern syntax for py312
+    "SIM",      # simplifications
+    "C4",       # comprehensions
+    "RUF",      # ruff-specific
+    "S",        # bandit: security
+    "BLE",      # blind except
+    "PT",       # pytest style
+    "RET",      # return consistency
+    "PL",       # pylint subset
+    "PTH",      # prefer pathlib
+]
+ignore = [
+    "PLR0911", "PLR0912", "PLR0913", "PLR0915",  # complexity counts: judged in review, not by a number
+    "PLR2004",  # magic values: too noisy for limits and status codes
+    "PT018",    # composite asserts: fine when the failure message is clear enough
+    "S603", "S607",  # subprocess calls are the core mechanism (claude, notify-send); inputs are not shell-parsed
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # assert is how pytest works
+    "S108",    # fixed /tmp paths in fixtures are fine
+    "PLC0415", # imports inside tests are sometimes deliberate (e.g. import-time checks)
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+files = ["src"]
+# Tests are checked in a second pass that allows unannotated test functions
+# (their bodies are still checked):
+#   mypy tests --allow-untyped-defs --allow-incomplete-defs --allow-untyped-calls --check-untyped-defs

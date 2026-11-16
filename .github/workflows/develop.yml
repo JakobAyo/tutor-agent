@@ -1,0 +1,64 @@
+# CD for develop: every merge into develop re-runs CI, then publishes a pre-release build
+# (X.Y.Z.devN) to TestPyPI so the current develop state can be installed and tried:
+#   uv tool install --index-url https://test.pypi.org/simple/ \
+#     --extra-index-url https://pypi.org/simple/ --prerelease allow tutor-agent
+name: Develop
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: develop
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit # passes the optional PRIVATE_TERMS to the private-data check
+
+  build-dev:
+    name: Build dev pre-release
+    needs: ci
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.11.18"
+      - name: Set version to next patch + .devN (N = workflow run number)
+        id: version
+        run: |
+          uv version --bump patch --bump "dev=${GITHUB_RUN_NUMBER}" --frozen
+          echo "version=$(uv version --short --frozen)" >> "$GITHUB_OUTPUT"
+      - run: uv build
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          retention-days: 14
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: build-dev
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/project/tutor-agent/${{ needs.build-dev.outputs.version }}/
+    permissions:
+      id-token: write # trusted publishing (OIDC), no API token stored in the repo
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          skip-existing: true
