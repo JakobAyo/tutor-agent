@@ -16,4 +16,8 @@
 | TUI | Textual 8.2 (the only runtime dependency, imported only by `tutor tui`) | [0009](../decisions/0009-textual-tui.md), [0028](../decisions/0028-lessons-and-tutor-pane.md) |
 | Packaging/tooling | uv (`uv_build` backend, `src/` layout), installed with `uv tool install .` | [0010](../decisions/0010-uv-and-python-312.md) |
 | Settings | `settings.toml` in the data directory, read with `tomllib` | [0024](../decisions/0024-settings-toml.md) |
-| Tests | pytest. A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1 |
+| Tests | pytest + pytest-cov (90% branch-coverage floor). A fake `claude` binary for runner tests; the one real call is opt-in (`uv run pytest -m real`) | M1, [0033](../decisions/0033-ci-cd-and-release-automation.md) |
+| Code quality | ruff (lint + format), mypy `--strict` on `src/`, pre-commit hooks | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
+| CI/CD | GitHub Actions: `ci.yml` (gates on PRs), `develop.yml` (TestPyPI `.devN`), `release.yml` (release-please → PyPI), CodeQL, Dependabot | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
+| Versioning | SemVer from Conventional Commits via release-please; it owns `CHANGELOG.md` and the version | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
+| License | MIT | [0033](../decisions/0033-ci-cd-and-release-automation.md) |
