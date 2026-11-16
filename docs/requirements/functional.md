@@ -11,9 +11,10 @@
 - **F4:** A desktop notification names the new concept(s). One notification per detection batch, not one per concept.
 
 ## Learn (tutor pane)
-- **F5:** The TUI lists concepts by status, with `new` first.
+- **F5:** The TUI lists concepts in one tab per status (`new` first, plus `All`), with counts ([0035](../decisions/0035-tui-tabs-filters-vim-keys.md)).
 - **F6:** Opening a concept shows a lesson: what the agent did, why, the general concept, and when *not* to use it, plus reading links. Opening it sets the status to `seen`.
 - **F7:** I can mark a concept `understood`, or reset it to `seen`.
 - **F8:** I can ask "explain what just happened" about the latest activity in a chosen session.
 - **F9:** I can ask follow-up questions about an open lesson.
 - **F10:** I can dismiss a concept as not worth learning, so it is never detected again.
+- **F11:** I can search concepts by name and summary, filter them by project and category, change the sort order, and move around the pane with vim keys ([0035](../decisions/0035-tui-tabs-filters-vim-keys.md)).

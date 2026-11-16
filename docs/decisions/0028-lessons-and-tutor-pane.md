@@ -1,6 +1,6 @@
 # 0028: Lesson format, lesson cache files, and tutor pane behaviour
 
-- **Status:** Accepted
+- **Status:** Accepted. The grouped list and the `h` key are superseded by [0035](0035-tui-tabs-filters-vim-keys.md)
 - **Date:** 2026-11-13
 
 ## Context
