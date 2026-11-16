@@ -89,7 +89,7 @@ def test_truncate_keeps_whole_lines_from_both_ends():
     text = "".join(f"line {i:04d}\n" for i in range(1000))
     out = truncate(text, 200)
     assert out.startswith("line 0000\n") and out.endswith("line 0999\n")
-    assert all(len(l) == 9 or "cut" in l for l in out.splitlines())
+    assert all(len(line) == 9 or "cut" in line for line in out.splitlines())
 
 
 def test_truncate_one_giant_line():

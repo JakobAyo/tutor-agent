@@ -75,7 +75,14 @@ def test_prompt_marks_trimmed_thread_and_empty_knowledge():
 
 
 def test_answer_uses_the_lesson_model_without_tools_or_session(fake_claude):
-    text = followups.answer(concept(), LESSON, [], [], "Why?", Settings(lesson_model="opus"))
+    text = followups.answer(
+        concept(),
+        LESSON,
+        thread=[],
+        known=[],
+        question="Why?",
+        settings=Settings(lesson_model="opus"),
+    )
     argv = fake_claude.record["argv"]
     assert argv[argv.index("--model") + 1] == "opus"
     assert "--no-session-persistence" in argv and "--resume" not in argv  # ADR 0012
@@ -86,4 +93,6 @@ def test_answer_uses_the_lesson_model_without_tools_or_session(fake_claude):
 def test_failed_answer_raises(fake_claude):
     fake_claude.mode("fail")
     with pytest.raises(runner.ClaudeError):
-        followups.answer(concept(), LESSON, [], [], "Why?", Settings())
+        followups.answer(
+            concept(), LESSON, thread=[], known=[], question="Why?", settings=Settings()
+        )

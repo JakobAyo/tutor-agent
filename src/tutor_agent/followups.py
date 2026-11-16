@@ -116,6 +116,7 @@ class FollowUpError(RuntimeError):
 def answer(
     concept: Concept,
     lesson: Lesson,
+    *,
     thread: list[Turn],
     known: list[Concept],
     question: str,

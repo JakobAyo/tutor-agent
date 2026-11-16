@@ -10,14 +10,17 @@ polled once a second, so concepts the detector adds show up without a restart.
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from typing import ClassVar
+
 from rich.text import Text
 from textual import work
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Footer, Header, Input, Markdown, OptionList
-from textual.widgets.option_list import Option
+from textual.widgets.option_list import Option, OptionDoesNotExist
 
 from tutor_agent import explain, followups, lessons, paths, settings
 from tutor_agent.log import get_logger
@@ -59,7 +62,7 @@ def card(concept: Concept) -> str:
         f"# {concept.name}",
         "",
         f"*{concept.category}* · **{concept.status}** · {project_name(concept)} · "
-        f"seen {len(concept.sources)}×",
+        f"seen {len(concept.sources)}×",  # noqa: RUF001  # the multiplication sign is intended
         "",
         concept.summary,
     ]
@@ -87,7 +90,7 @@ class SessionPicker(ModalScreen[explain.Session | None]):
     SessionPicker { align: center middle; }
     #sessions { width: 90; max-height: 24; border: round $primary; }
     """
-    BINDINGS = [Binding("escape", "cancel", "Cancel")]
+    BINDINGS: ClassVar[list[BindingType]] = [Binding("escape", "cancel", "Cancel")]
 
     def __init__(self, sessions: list[explain.Session]) -> None:
         super().__init__()
@@ -102,20 +105,21 @@ class SessionPicker(ModalScreen[explain.Session | None]):
 
     def on_option_list_option_selected(self, event: OptionList.OptionSelected) -> None:
         event.stop()
-        self.dismiss(self.sessions[int(event.option_id)])
+        if event.option_id is not None:  # every option is created with an id
+            self.dismiss(self.sessions[int(event.option_id)])
 
     def action_cancel(self) -> None:
         self.dismiss(None)
 
 
-class TutorApp(App):
+class TutorApp(App[None]):
     TITLE = "Tutor"
     CSS = """
     #concepts { width: 42; border-right: solid $primary-background; }
     #lesson-pane { padding: 0 2; }
     #ask { dock: bottom; }
     """
-    BINDINGS = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("u", "set_status('understood')", "Understood"),
         Binding("s", "set_status('seen')", "Back to seen"),
         Binding("d", "set_status('dismissed')", "Dismiss"),
@@ -222,7 +226,7 @@ class TutorApp(App):
         if cid is not None:
             try:
                 index = option_list.get_option_index(cid)
-            except Exception:  # hidden now (dismissed) or gone
+            except OptionDoesNotExist:  # hidden now (dismissed) or gone
                 index = None
         if index is None:
             index = next(
@@ -277,7 +281,7 @@ class TutorApp(App):
             pane.scroll_home(animate=False)
 
     def show_current(self, scroll_end: bool = False) -> None:
-        """Cached lesson if there is one (no LLM call), a generating state, an error, or the card."""
+        """Cached lesson (no LLM call), a generating state, an error, or the card."""
         if self.showing_explanation:
             return
         concept = self.current()
@@ -325,7 +329,8 @@ class TutorApp(App):
             lesson = lessons.generate(concept, self.cfg)
             self.cache.put(lesson)
             error = None
-        except Exception as e:  # ClaudeError, LessonError, OSError: shown in the pane, logged
+        # Worker thread: any failure is shown in the pane and logged, it must not kill the TUI.
+        except Exception as e:  # noqa: BLE001  # ClaudeError, LessonError, OSError, ...
             get_logger().exception("lesson failed for %s", concept.id)
             error = str(e) or type(e).__name__
         self.call_from_thread(self.lesson_done, concept.id, error)
@@ -375,15 +380,26 @@ class TutorApp(App):
         question: str,
     ) -> None:
         try:
-            text, error = followups.answer(concept, lesson, thread, known, question, self.cfg), None
-        except Exception as e:  # ClaudeError, FollowUpError: shown as a notification, logged
+            text, error = (
+                followups.answer(
+                    concept,
+                    lesson,
+                    thread=thread,
+                    known=known,
+                    question=question,
+                    settings=self.cfg,
+                ),
+                None,
+            )
+        # Worker thread: any failure is shown as a notification and logged.
+        except Exception as e:  # noqa: BLE001  # ClaudeError, FollowUpError, ...
             get_logger().exception("follow-up failed for %s", concept.id)
             text, error = None, str(e) or type(e).__name__
         self.call_from_thread(self.followup_done, concept.id, question, text, error)
 
     def followup_done(self, cid: str, question: str, text: str | None, error: str | None) -> None:
         self.asking.pop(cid, None)
-        if error:
+        if text is None:  # the worker sets `error` exactly when there is no text
             self.notify(f"Follow-up failed: {error}", severity="error")
             if not self.ask_input.value:
                 self.ask_input.value = question  # don't make me type it again
@@ -427,7 +443,8 @@ class TutorApp(App):
                 text += (
                     f"\n\n*{turn.dropped_events} earlier events of this long turn were left out.*"
                 )
-        except Exception as e:  # OSError, ClaudeError, ExplainError
+        # Worker thread: any failure is shown as a notification and logged.
+        except Exception as e:  # noqa: BLE001  # OSError, ClaudeError, ExplainError, ...
             get_logger().exception("explanation failed for %s", session.transcript)
             text, error = None, str(e) or type(e).__name__
         self.call_from_thread(self.explanation_done, session, text, error)
@@ -436,7 +453,7 @@ class TutorApp(App):
         self, session: explain.Session, text: str | None, error: str | None
     ) -> None:
         self.explaining = None
-        if error:
+        if text is None:  # the worker sets `error` exactly when there is no text
             self.notify(f"Explanation failed: {error}", severity="error")
             if self.showing_explanation:
                 self.showing_explanation = False
@@ -480,7 +497,7 @@ class TutorApp(App):
         self.show_dismissed = not self.show_dismissed
         self.reload()
 
-    def _change(self, write) -> None:
+    def _change(self, write: Callable[[], object]) -> None:
         try:
             write()
         except (StoreError, KeyError, OSError) as e:

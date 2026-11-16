@@ -23,10 +23,15 @@ pytestmark = [
 
 EXPECTED = {
     "harness-gates-python": r"infra|budget|timeout|baseline|preflight|fail.fast|limit|backstop",
-    "ics-meeting-widget": r"subprocess|process boundary|helper process|error.as.data|recurrence|test double|stub|PATH|mature library|degradation",
+    "ics-meeting-widget": (
+        r"subprocess|process boundary|helper process|error.as.data|recurrence|test double|stub|PATH"
+        r"|mature library|degradation"
+    ),
     "qml-animation-widget": r"binding|declarative|reactive|animation|layer.shell|polling",
     "subagent": r"snapshot|diff|glob|escap|probe|schema",
-    "supervisor-loop": r"rollback|checkpoint|canary|watchdog|supervisor|allowlist|least.privilege|exit code|retry",
+    "supervisor-loop": (
+        r"rollback|checkpoint|canary|watchdog|supervisor|allowlist|least.privilege|exit code|retry"
+    ),
 }
 BASICS = re.compile(
     r"\b(for loops?|if statements?|variables?|assignment|string formatting|f-strings?|print(ing)?|"

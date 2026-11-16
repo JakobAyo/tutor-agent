@@ -7,8 +7,10 @@ that wrote records after that prompt.
 
 import json
 import time
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from tutor_agent import paths, runner
 from tutor_agent.events import Event, EventMapper, Kind, is_prompt, text_of
@@ -90,9 +92,9 @@ def subagent_transcripts(transcript: Path) -> list[Path]:
     return sorted((transcript.parent / transcript.stem / "subagents").glob("agent-*.jsonl"))
 
 
-def _records(path: Path, start: int = 0):
+def _records(path: Path, start: int = 0) -> Iterator[dict[str, Any]]:
     """Parsed dict records from `start` on. Broken and partial lines are skipped."""
-    with open(path, "rb") as f:
+    with path.open("rb") as f:
         f.seek(start)
         if start:
             f.readline()  # most likely the middle of a line
@@ -149,7 +151,7 @@ def recent_sessions(
 
 def latest_turn(session: Session) -> LatestTurn:
     """Events from the last prompt to the end, merged with subagent work from the same span."""
-    turn_records: list[tuple[dict, str]] = []
+    turn_records: list[tuple[dict[str, Any], str]] = []
     start_ts = ""
     for line, rec in enumerate(_records(session.transcript), 1):
         if is_prompt(rec):

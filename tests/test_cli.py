@@ -19,7 +19,8 @@ def test_tui_reports_bad_settings(data_dir, capsys):
 def test_hook_path_never_imports_textual():
     # A fresh interpreter: the TUI tests in this process have imported Textual already (ADR 0009).
     code = (
-        "import sys, io; sys.stdin = io.StringIO('{}'); from tutor_agent import cli; cli.main(['hook']); "
+        "import sys, io; sys.stdin = io.StringIO('{}'); "
+        "from tutor_agent import cli; cli.main(['hook']); "
         "assert 'textual' not in sys.modules, 'textual imported'"
     )
     subprocess.run([sys.executable, "-c", code], check=True)

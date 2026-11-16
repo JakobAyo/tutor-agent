@@ -17,13 +17,14 @@ def concept(**kw) -> Concept:
         project="/home/me/Projects/api",
         file="/home/me/Projects/api/client.py",
     )
-    base = dict(
-        id="retry-with-backoff",
-        name="Retry with backoff",
-        category="Design patterns",
-        summary="Retry a failing call with growing delays.",
-        sources=[old, new],
-    )
+    base = {
+        "id": "retry-with-backoff",
+        "name": "Retry with backoff",
+        "category": "Design patterns",
+        "summary": "Retry a failing call with growing delays.",
+        "sources": [old, new],
+    }
+
     return Concept(**{**base, **kw})
 
 

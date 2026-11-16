@@ -13,6 +13,7 @@ import re
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from tutor_agent import paths
 from tutor_agent.events import Event, EventMapper
@@ -52,7 +53,7 @@ def read_new(transcript: Path, session_id: str | None = None, *, advance: bool =
     directory = paths.data_dir() / "offsets"
     directory.mkdir(exist_ok=True)
     offsets_path = directory / f"{session_id}.json"
-    with open(directory / f"{session_id}.lock", "a") as lock:
+    with (directory / f"{session_id}.lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         try:
             offsets = _load(offsets_path)
@@ -66,7 +67,9 @@ def read_new(transcript: Path, session_id: str | None = None, *, advance: bool =
     return batch
 
 
-def _read_from(transcript: Path, session_id: str, pos: dict) -> tuple[Batch, dict]:
+def _read_from(
+    transcript: Path, session_id: str, pos: dict[str, int]
+) -> tuple[Batch, dict[str, int]]:
     log = get_logger()
     byte, line = pos["byte"], pos["line"]
     if transcript.stat().st_size < byte:
@@ -77,7 +80,7 @@ def _read_from(transcript: Path, session_id: str, pos: dict) -> tuple[Batch, dic
     events: list[Event] = []
     skipped = 0
     first_line = line + 1
-    with open(transcript, "rb") as f:
+    with transcript.open("rb") as f:
         f.seek(byte)
         for raw in f:
             if not raw.endswith(b"\n"):
@@ -106,23 +109,26 @@ def _read_from(transcript: Path, session_id: str, pos: dict) -> tuple[Batch, dic
     return batch, {"byte": byte, "line": line}
 
 
-def _load(path: Path) -> dict:
+def _load(path: Path) -> dict[str, Any]:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(path.read_text(encoding="utf-8"))
     except FileNotFoundError:
         return {}
     except json.JSONDecodeError:
+        data = None
+    if not isinstance(data, dict):
         # Losing offsets only means one batch is re-read; refusing would stop all detection.
         get_logger().warning("%s is corrupt, starting the session's offsets over", path)
         return {}
+    return data
 
 
-def _save(path: Path, offsets: dict) -> None:
+def _save(path: Path, offsets: dict[str, Any]) -> None:
     fd, tmp = tempfile.mkstemp(dir=path.parent, prefix=path.name + ".", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(offsets, f, indent=1)
-        os.replace(tmp, path)
+        Path(tmp).replace(path)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)
         raise

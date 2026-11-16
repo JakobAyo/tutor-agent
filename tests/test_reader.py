@@ -34,14 +34,14 @@ def test_each_read_returns_only_new_events(tmp_path):
 def test_partial_last_line_is_read_next_time(tmp_path):
     path = t.write(main_path(tmp_path), t.turn(0), partial='{"type": "user", "mess')
     assert len(reader.read_new(path).events) == 6
-    with open(path, "a") as f:
+    with path.open("a") as f:
         f.write('age": {"content": "next prompt"}}\n')
     assert prompts(reader.read_new(path)) == ["next prompt"]
 
 
 def test_broken_complete_line_is_skipped_not_stuck(tmp_path):
     path = t.write(main_path(tmp_path), [t.prompt("a")])
-    with open(path, "a") as f:
+    with path.open("a") as f:
         f.write("not json\n")
     t.write(path, [t.prompt("b")], append=True)
     batch = reader.read_new(path)

@@ -1,4 +1,5 @@
 import json
+from typing import Any
 
 import pytest
 
@@ -18,7 +19,7 @@ def our_commands(settings):
 
 
 @pytest.mark.parametrize(
-    "command,ours",
+    ("command", "ours"),
     [
         (CMD, True),
         ("tutor hook", True),
@@ -34,7 +35,10 @@ def test_is_ours(command, ours):
 
 def test_with_hook_keeps_other_hooks_and_is_idempotent():
     theirs = {"hooks": [{"type": "command", "command": "notify.sh"}]}
-    settings = {"model": "opus", "hooks": {"Stop": [theirs], "PreToolUse": [theirs]}}
+    settings: dict[str, Any] = {
+        "model": "opus",
+        "hooks": {"Stop": [theirs], "PreToolUse": [theirs]},
+    }
     once = install.with_hook(settings, CMD)
     assert once["model"] == "opus" and once["hooks"]["PreToolUse"] == [theirs]
     assert once["hooks"]["Stop"][0] == theirs
@@ -67,7 +71,7 @@ def test_apply_asks_backs_up_and_writes(tmp_path):
     path = tmp_path / "settings.json"
     path.write_text('{"model": "opus"}\n')
     path.chmod(0o600)
-    lines = []
+    lines: list[str] = []
     assert install.apply(
         lambda s: install.with_hook(s, CMD), path=path, ask=lambda _: "y", out=lines.append
     )

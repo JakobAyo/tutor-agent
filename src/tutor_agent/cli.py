@@ -1,15 +1,24 @@
 """The `tutor` command. Imports stay inside the handlers, so `tutor hook` starts fast."""
 
+# ruff: noqa: PLC0415  # lazy imports are deliberate: `tutor hook` runs in every agent turn
+
+from __future__ import annotations
+
 import sys
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import argparse
+    from collections.abc import Callable
 
 
-def _hook(args) -> int:
+def _hook(args: argparse.Namespace | None) -> int:
     from tutor_agent import hook
 
     return hook.main()
 
 
-def _detect(args) -> int:
+def _detect(args: argparse.Namespace) -> int:
     from pathlib import Path
 
     from tutor_agent import paths, pipeline
@@ -20,7 +29,7 @@ def _detect(args) -> int:
     return code
 
 
-def _install(args) -> int:
+def _install(args: argparse.Namespace) -> int:
     from tutor_agent import install
 
     try:
@@ -31,7 +40,7 @@ def _install(args) -> int:
     return 0
 
 
-def _explain(args) -> int:
+def _explain(args: argparse.Namespace) -> int:
     from tutor_agent import explain, followups, runner, settings
     from tutor_agent.store import ConceptStore, StoreError
 
@@ -62,7 +71,7 @@ def _explain(args) -> int:
     return 0
 
 
-def _stats(args) -> int:
+def _stats(args: argparse.Namespace) -> int:
     from collections import Counter
 
     from tutor_agent import paths, usage
@@ -94,19 +103,18 @@ def _stats(args) -> int:
     for date, d in days:
         jobs = ", ".join(f"{job} {n}" for job, n in sorted(d.calls.items()))
         failed = f", {d.failed} failed" if d.failed else ""
-        print(
-            f"  {date}  {sum(d.calls.values()):>3} calls ({jobs}{failed})  ${d.cost_usd:.3f}  {d.ms / 1000:.0f}s"
-        )
+        calls = sum(d.calls.values())
+        print(f"  {date}  {calls:>3} calls ({jobs}{failed})  ${d.cost_usd:.3f}  {d.ms / 1000:.0f}s")
     return 0
 
 
-def _tui(args) -> int:
+def _tui(args: argparse.Namespace) -> int:
     from tutor_agent import tui
 
     return tui.main()
 
 
-def build_parser():
+def build_parser() -> argparse.ArgumentParser:
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -167,7 +175,8 @@ def main(argv: list[str] | None = None) -> int:
     if argv == ["hook"]:  # fast path: skip argparse, it runs inside every agent turn
         return _hook(None)
     args = build_parser().parse_args(argv)
-    return args.func(args)
+    func: Callable[[argparse.Namespace], int] = args.func
+    return func(args)
 
 
 if __name__ == "__main__":

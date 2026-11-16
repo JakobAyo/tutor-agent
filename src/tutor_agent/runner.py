@@ -17,7 +17,7 @@ from tutor_agent import paths, usage
 from tutor_agent.log import get_logger, register_secret
 
 INTERNAL_ENV = "TUTOR_AGENT_INTERNAL"
-TOKEN_ENV = "CLAUDE_CODE_OAUTH_TOKEN"
+TOKEN_ENV = "CLAUDE_CODE_OAUTH_TOKEN"  # noqa: S105  # env var name, not a secret
 
 # Set by the Claude Code session that started the hook. Dropping them makes the call behave like
 # a fresh top-level `claude -p` instead of a nested child of the observed session.
@@ -46,11 +46,11 @@ class RunResult:
     structured: Any
     duration_ms: int
     cost_usd: float | None
-    raw: dict
+    raw: dict[str, Any]
 
 
 def build_command(
-    claude_bin: str, model: str, system_prompt: str, json_schema: dict | None
+    claude_bin: str, model: str, system_prompt: str, json_schema: dict[str, Any] | None
 ) -> list[str]:
     cmd = [
         claude_bin,
@@ -102,7 +102,7 @@ def run(
     *,
     model: str,
     system_prompt: str,
-    json_schema: dict | None = None,
+    json_schema: dict[str, Any] | None = None,
     timeout_s: float = 120.0,
     claude_bin: str = "claude",
     job: str = "other",

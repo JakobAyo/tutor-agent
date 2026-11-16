@@ -7,8 +7,14 @@ from textual.widgets import Input, Markdown, OptionList
 
 from tutor_agent import lessons
 from tutor_agent.settings import Settings
-from tutor_agent.store import ConceptStore, Entry, Source, Status
+from tutor_agent.store import Concept, ConceptStore, Entry, Source, Status
 from tutor_agent.tui import SessionPicker, TutorApp
+
+
+def get(store: ConceptStore, cid: str) -> Concept:
+    concept = store.get(cid)
+    assert concept is not None, f"{cid} not in the store"
+    return concept
 
 
 def seed(*names: str) -> ConceptStore:
@@ -45,7 +51,8 @@ def options(app) -> list[str]:
 
 
 def shown(app) -> str:
-    return app.query_one("#lesson", Markdown).source
+    source: str = app.query_one("#lesson", Markdown).source
+    return source
 
 
 async def settle(pilot, app):
@@ -80,7 +87,7 @@ def test_highlight_shows_card_without_a_call(fake_claude):
     async def t(pilot, app):
         assert "About Alpha." in shown(app) and "Enter" in shown(app)
         assert fake_claude.calls == 0
-        assert store.get("alpha").status is Status.NEW
+        assert get(store, "alpha").status is Status.NEW
 
     run(t, store)
 
@@ -93,7 +100,7 @@ def test_open_marks_seen_generates_once_and_reopens_from_cache(fake_claude):
         await pilot.press("enter")
         await settle(pilot, app)
         assert fake_claude.calls == 1
-        assert store.get(first).status is Status.SEEN
+        assert get(store, first).status is Status.SEEN
         assert "echo: CONCEPT:" in shown(app)
         assert lessons.LessonCache().get(first) is not None
 
@@ -140,19 +147,19 @@ def test_status_keys_follow_the_learner_model():
 
     async def t(pilot, app):
         await pilot.press("s")  # new -> seen is not a key: opening does that
-        assert store.get("alpha").status is Status.NEW
+        assert get(store, "alpha").status is Status.NEW
         await pilot.press("u")
-        assert store.get("alpha").status is Status.UNDERSTOOD
+        assert get(store, "alpha").status is Status.UNDERSTOOD
         await pilot.press("s")
-        assert store.get("alpha").status is Status.SEEN
+        assert get(store, "alpha").status is Status.SEEN
         await pilot.press("d")
-        assert store.get("alpha").status is Status.DISMISSED
+        assert get(store, "alpha").status is Status.DISMISSED
         assert "Alpha" not in options(app)  # hidden by default
         await pilot.press("h")
         while app.highlighted_id() != "alpha":
             await pilot.press("down")
         await pilot.press("n")
-        assert store.get("alpha").status is Status.NEW
+        assert get(store, "alpha").status is Status.NEW
 
     run(t, store)
 
@@ -243,7 +250,7 @@ def test_follow_up_keys_type_into_the_input_not_the_status_keys(fake_claude):
     async def t(pilot, app):
         await open_lesson(pilot, app)
         await ask(pilot, app, "uds")  # u, d, s are status keys outside the input
-        assert store.get("alpha").status is Status.SEEN
+        assert get(store, "alpha").status is Status.SEEN
         assert fake_claude.record["stdin"].endswith("QUESTION:\nuds")
         await pilot.press("escape")
         assert app.focused is app.query_one(OptionList)

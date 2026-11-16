@@ -65,10 +65,10 @@ def test_follow_up_refers_to_the_lesson_and_builds_on_known_concepts():
     answer = followups.answer(
         concept,
         lesson,
-        [],
-        known,
-        "How does the supervisor make sure a hanging harness run gets stopped?",
-        Settings(),
+        thread=[],
+        known=known,
+        question="How does the supervisor make sure a hanging harness run gets stopped?",
+        settings=Settings(),
     )
     assert session_files() == before, "the follow-up created a Claude Code session"
 

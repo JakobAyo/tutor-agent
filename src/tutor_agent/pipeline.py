@@ -48,7 +48,7 @@ def detect_and_store(batch: reader.Batch, where: str) -> list[Concept]:
     before either stored its concepts, so the second one names the same ideas again, differently.
     Waiting is fine: this process is detached from the agent session.
     """
-    with open(paths.detect_lock_file(), "a") as lock:
+    with paths.detect_lock_file().open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)  # released when the file closes
         return _detect_and_store(batch, where)
 

@@ -4,6 +4,7 @@ import os
 import subprocess
 import sys
 import time
+from typing import Any
 
 import pytest
 import transcripts as t
@@ -26,7 +27,9 @@ def test_stop_reads_main_transcript():
 
 def test_subagent_stop_reads_agent_transcript():
     payload = stop("/m.jsonl", hook_event_name="SubagentStop", agent_transcript_path="/s.jsonl")
-    assert hook.detect_args(payload)[1] == "/s.jsonl"
+    args = hook.detect_args(payload)
+    assert args is not None
+    assert args[1] == "/s.jsonl"
 
 
 def test_other_events_are_ignored():
@@ -34,7 +37,7 @@ def test_other_events_are_ignored():
 
 
 def test_missing_path_is_an_error():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="without transcript path"):
         hook.detect_args({"hook_event_name": "SubagentStop", "session_id": "s"})
 
 
@@ -47,13 +50,16 @@ def test_bad_payload_is_logged_not_raised(stdin, monkeypatch, data_dir, capsys):
     assert "hook failed" in (data_dir / "tutor.log").read_text()
 
 
-def run_hook(payload: dict, env: dict | None = None) -> tuple[subprocess.CompletedProcess, float]:
+def run_hook(
+    payload: dict[str, Any], env: dict[str, str] | None = None
+) -> tuple[subprocess.CompletedProcess[str], float]:
     start = time.perf_counter()
     proc = subprocess.run(
         [sys.executable, "-m", "tutor_agent.cli", "hook"],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
+        check=False,  # the callers assert on the exit code
         env={**os.environ, **(env or {})},
     )
     return proc, time.perf_counter() - start

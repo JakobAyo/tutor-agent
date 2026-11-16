@@ -31,7 +31,7 @@ def test_empty_batch_is_skipped():
 
 def test_short_chat_is_skipped():
     events = mapped([t.prompt("thanks!"), t.assistant(t.text("You're welcome."))])
-    assert "no edits, no commands" in skip_reason(events)
+    assert "no edits, no commands" in (skip_reason(events) or "")
 
 
 def test_long_explanation_passes():

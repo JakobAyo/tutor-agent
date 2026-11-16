@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Any
 
 import pytest
 
@@ -83,7 +84,7 @@ def test_missing_structured_output_raises(fake_claude):
         call(fake_claude, json_schema=SCHEMA)
 
 
-def ledger() -> list[dict]:
+def ledger() -> list[dict[str, Any]]:
     import json
 
     return [json.loads(line) for line in paths.usage_file().read_text().splitlines()]
@@ -152,7 +153,7 @@ def test_token_from_env_file_is_passed(fake_claude, monkeypatch):
     env_file.write_text("# comment\nCLAUDE_CODE_OAUTH_TOKEN='sk-ant-oat-secret'\n")
     env_file.chmod(0o600)
     call(fake_claude)
-    assert fake_claude.record["env"]["CLAUDE_CODE_OAUTH_TOKEN"] == "sk-ant-oat-secret"
+    assert fake_claude.record["env"]["CLAUDE_CODE_OAUTH_TOKEN"] == "sk-ant-oat-secret"  # noqa: S105  # fake token
 
 
 def test_token_never_reaches_log(fake_claude):

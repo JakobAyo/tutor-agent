@@ -4,7 +4,22 @@ import multiprocessing as mp
 import pytest
 
 from tutor_agent import paths
-from tutor_agent.store import ConceptStore, Entry, Outcome, Source, Status, StoreError, concept_id
+from tutor_agent.store import (
+    Concept,
+    ConceptStore,
+    Entry,
+    Outcome,
+    Source,
+    Status,
+    StoreError,
+    concept_id,
+)
+
+
+def get(store: ConceptStore, cid: str) -> Concept:
+    concept = store.get(cid)
+    assert concept is not None, f"{cid} not in the store"
+    return concept
 
 
 def src(text="x = 1", context="the agent did a thing"):
@@ -19,7 +34,7 @@ def test_concept_id_normalizes_names():
         == concept_id("dependency-injection")
         == "dependency-injection"
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="no letters or digits"):
         concept_id("  !! ")
 
 
@@ -48,9 +63,9 @@ def test_dismissed_concept_gets_no_new_source():
     store = ConceptStore()
     store.add("Idempotency", "pattern", "s", src("a"))
     store.set_status("idempotency", Status.DISMISSED)
-    concept, outcome = store.add("idempotency", "pattern", "s", src("b"))
+    _, outcome = store.add("idempotency", "pattern", "s", src("b"))
     assert outcome is Outcome.DISMISSED
-    assert [s.snippet for s in store.get("idempotency").sources] == ["a"]
+    assert [s.snippet for s in get(store, "idempotency").sources] == ["a"]
 
 
 def test_record_stores_a_batch_in_one_write():
@@ -60,7 +75,7 @@ def test_record_stores_a_batch_in_one_write():
         [Entry("New one", "pattern", "s", src("b")), Entry("known", "pattern", "s", src("c"))]
     )
     assert [o for _, o in results] == [Outcome.CREATED, Outcome.ATTACHED]
-    assert len(store.get("known").sources) == 2
+    assert len(get(store, "known").sources) == 2
 
 
 def test_status_changes():
@@ -70,7 +85,7 @@ def test_status_changes():
     assert store.set_status("idempotency", Status.UNDERSTOOD).status is Status.UNDERSTOOD
     assert store.mark_seen("idempotency").status is Status.UNDERSTOOD  # never downgraded
     assert store.set_status("idempotency", "dismissed").status is Status.DISMISSED
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a valid Status"):
         store.set_status("idempotency", "bogus")
 
 
@@ -83,7 +98,7 @@ def test_failed_change_saves_nothing():
     store = ConceptStore()
     store.add("Idempotency", "pattern", "s", src())
     before = store.path.read_text()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="not a valid Status"):
         store.set_status("idempotency", "bogus")
     assert store.path.read_text() == before
 

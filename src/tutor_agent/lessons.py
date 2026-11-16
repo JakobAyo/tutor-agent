@@ -1,4 +1,6 @@
-"""Lessons: one `claude -p` call on the strong model per concept, cached on disk (ADR 0016, 0017, 0028).
+"""Lessons: one `claude -p` call on the strong model per concept, cached on disk.
+
+See ADR 0016, 0017, 0028.
 
 A lesson starts from the stored snippet (ADR 0013), so it works after the transcript is gone.
 The cache keeps the source it was built from, because follow-ups need it as context (ADR 0012).
@@ -10,6 +12,7 @@ import re
 import tempfile
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 
 from tutor_agent import paths, runner
 from tutor_agent.settings import Settings
@@ -29,7 +32,8 @@ then say in one or two sentences what it does.
 The problem this concept solves here, in this project.
 
 ## The general concept
-What it is beyond this case, in plain terms. Name the pattern or mechanism and where else it shows up.
+What it is beyond this case, in plain terms. Name the pattern or mechanism and where else it \
+shows up.
 
 ## Trade-offs
 When NOT to use it, what it costs, and the common alternatives.
@@ -55,7 +59,7 @@ class Lesson:
     source: Source  # what the lesson was built from; follow-ups reuse it (ADR 0012)
 
     @classmethod
-    def from_dict(cls, raw: dict) -> "Lesson":
+    def from_dict(cls, raw: dict[str, Any]) -> "Lesson":
         return cls(**{**raw, "source": Source(**raw["source"])})
 
 
@@ -135,7 +139,10 @@ def generate(concept: Concept, settings: Settings) -> Lesson:
 
 
 class LessonCache:
-    """One JSON file per concept in `lessons/`. Written atomically; a broken file counts as missing."""
+    """One JSON file per concept in `lessons/`.
+
+    Written atomically; a broken file counts as missing.
+    """
 
     def __init__(self, directory: Path | None = None) -> None:
         self.dir = directory or paths.lessons_dir()
@@ -161,7 +168,7 @@ class LessonCache:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(asdict(lesson), f, indent=1, ensure_ascii=False)
-            os.replace(tmp, target)
+            Path(tmp).replace(target)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
             raise
