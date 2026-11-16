@@ -1,0 +1,6 @@
+# Scan only code that ships (src/, scripts/, workflows). Tests deliberately feed fake secrets
+# to check redaction, and spike/ holds throwaway M0 scripts (also excluded from ruff).
+name: tutor-agent CodeQL config
+paths-ignore:
+  - tests
+  - spike
